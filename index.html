@@ -225,6 +225,7 @@ function viewOrder(){if(!order.length)return'<div class="backbar"><button data-b
 function viewSettings(){
  var chains=DATA.chains.map(function(c){return'<button class="pick" type="button" data-pin="'+esc(c.id)+'" aria-pressed="'+(pins.indexOf(c.id)>-1)+'">'+esc(c.name)+'</button>'}).join('');
  function seg(attr,val,cur,label){return'<button class="seg" type="button" data-'+attr+'="'+val+'" aria-pressed="'+(cur===val)+'">'+label+'</button>'}
+ function segTheme(val,label){return'<button class="seg" type="button" data-settheme="'+val+'" aria-pressed="'+(theme===val)+'">'+label+'</button>'}
  return'<div class="backbar"><button type="button" data-back="1">\u2039 Back</button></div>'
   +'<h2 class="welcome" style="margin:12px 0 0">Settings</h2>'
   +'<div class="setgroup"><h3>Your name</h3><p class="hint">Used for the greeting on the home screen. Stays on this device.</p>'
@@ -232,7 +233,7 @@ function viewSettings(){
   +'<div class="setgroup"><h3>How much detail</h3><p class="hint">Simple shows one number that matches your goal, plus a reminder. Full shows every macro and every change you can make. You can still tap any item to see everything.</p>'
    +'<div class="segrow">'+seg('detail','simple',detail,'Simple')+seg('detail','full',detail,'Full')+'</div></div>'
   +'<div class="setgroup"><h3>Appearance</h3><p class="hint">Auto follows your phone.</p>'
-   +'<div class="segrow">'+seg('theme','auto',theme,'Auto')+seg('theme','light',theme,'Light')+seg('theme','dark',theme,'Dark')+'</div></div>'
+   +'<div class="segrow">'+segTheme('auto','Auto')+segTheme('light','Light')+segTheme('dark','Dark')+'</div></div>'
   +'<div class="setgroup"><h3>Your regulars</h3><p class="hint">Pinned restaurants sit at the top of the list.</p><div class="pickgrid">'+chains+'</div></div>'
   +'<div class="setgroup"><h3>About</h3>'
    +'<button class="setlink" type="button" data-goto="#/about">Data sources &amp; disclaimers<small>Where the numbers come from, and what they can\u2019t tell you</small></button>'
@@ -255,15 +256,15 @@ function updateOrderCount(){var el=document.getElementById('orderCount');if(el)e
 function render(){if(!DATA)return;applyTheme();if(localStorage.getItem('so:agreed')!==DISCLAIMER_VERSION){renderOnboard();return}document.getElementById('onboard').classList.add('hidden');document.getElementById('shell').classList.remove('hidden');var h=location.hash||'#/',app=document.getElementById('app'),title='Smart Order';if(h.indexOf('#/c/')===0){var c=chainById(h.slice(4));title=c?c.name:'Smart Order';app.innerHTML=viewChain(h.slice(4))}else if(h==='#/order'){title='My Order';app.innerHTML=viewOrder()}else if(h==='#/settings'){title='Settings';app.innerHTML=viewSettings()}else if(h==='#/about'){title='About';app.innerHTML=viewAbout()}else{cat='all';app.innerHTML=viewHome()}document.getElementById('hTitle').textContent=title;document.getElementById('stamp').textContent='Nutrition data · '+(DATA.updated||DATA.version);save()}
 window.addEventListener('hashchange',function(){render();window.scrollTo(0,0)});
 document.addEventListener('click',function(e){var t=e.target,ob=t.closest('[data-ob]');if(ob){var a=ob.dataset.ob;if(a==='next'){obStep++;viewOnboard()}if(a==='done')finishOnboard();if(a==='redo'){obStep=0;obPicks=pins.slice();renderOnboard()}if(a==='installnext')requestInstall(true);return}
-var obd=t.closest('[data-ob-detail]');if(obd){detail=obd.dataset.obDetail;save();viewOnboard();return}var pk=t.closest('[data-pick]');if(pk){var id=pk.dataset.pick,at=obPicks.indexOf(id);if(at>-1)obPicks.splice(at,1);else obPicks.push(id);pk.setAttribute('aria-pressed',at===-1);return}var pin=t.closest('[data-pin]');if(pin){var pid=pin.dataset.pin,pi=pins.indexOf(pid);if(pi>-1)pins.splice(pi,1);else pins.push(pid);save();render();return}var sr=t.closest('[data-showrest]');if(sr){showRest=!showRest;render();return}
-var sa=t.closest('[data-showall]');if(sa){showAll=true;render();return}
+var obd=t.closest('[data-ob-detail]');if(obd){detail=obd.dataset.obDetail;save();viewOnboard();return}var pk=t.closest('[data-pick]');if(pk){var id=pk.dataset.pick,at=obPicks.indexOf(id);if(at>-1)obPicks.splice(at,1);else obPicks.push(id);pk.setAttribute('aria-pressed',at===-1);return}var pin=t.closest('[data-pin]');if(pin){var pid=pin.dataset.pin,pi=pins.indexOf(pid);if(pi>-1)pins.splice(pi,1);else pins.push(pid);save();render();return}var sr=t.closest('button[data-showrest]');if(sr){showRest=!showRest;render();return}
+var sa=t.closest('button[data-showall]');if(sa){showAll=true;render();return}
 var g=t.closest('[data-goal]');if(g){goal=g.dataset.goal;picks={};showRest=false;save();render();return}var cc=t.closest('[data-cat]');if(cc){cat=cc.dataset.cat;render();return}var card=t.closest('[data-chain]');if(card){query='';cat='all';showRest=false;expanded={};go('#/c/'+card.dataset.chain);return}var add=t.closest('[data-add-order]');if(add){addOrder(add.dataset.addOrder);return}var rem=t.closest('[data-remove-order]');if(rem){order.splice(+rem.dataset.removeOrder,1);save();render();showToast('Removed from My Order');return}if(t.closest('[data-clear-order]')){order=[];save();render();showToast('My Order cleared');return}if(t.closest('[data-check-update]')){checkVersion(true);return}if(t.closest('[data-install-app]')){requestInstall(false);return}if(t.closest('[data-back]')){history.length>1?history.back():go('#/');return}if(t.closest('#btnOrder')){go('#/order');return}
-var dsel=t.closest('[data-detail]');if(dsel){detail=dsel.dataset.detail;expanded={};save();render();showToast(detail==='simple'?'Simple view on \u2014 one number per pick.':'Full view on \u2014 every macro shown.');return}
-var tsel=t.closest('[data-theme]');if(tsel){theme=tsel.dataset.theme;save();applyTheme();render();return}
-var gto=t.closest('[data-goto]');if(gto){go(gto.dataset.goto);return}
-var more=t.closest('[data-more]');if(more){expanded[more.dataset.more]=true;renderCurrentItem(more.dataset.more);return}
-var less=t.closest('[data-less]');if(less){delete expanded[less.dataset.less];renderCurrentItem(less.dataset.less);return}
-var cd=t.closest('[data-chain-data]');if(cd){go('#/about');return}
+var dsel=t.closest('button[data-detail]');if(dsel){detail=dsel.dataset.detail;expanded={};save();render();showToast(detail==='simple'?'Simple view on \u2014 one number per pick.':'Full view on \u2014 every macro shown.');return}
+var tsel=t.closest('button[data-settheme]');if(tsel){theme=tsel.dataset.settheme;save();applyTheme();render();return}
+var gto=t.closest('button[data-goto]');if(gto){go(gto.dataset.goto);return}
+var more=t.closest('button[data-more]');if(more){expanded[more.dataset.more]=true;renderCurrentItem(more.dataset.more);return}
+var less=t.closest('button[data-less]');if(less){delete expanded[less.dataset.less];renderCurrentItem(less.dataset.less);return}
+var cd=t.closest('button[data-chain-data]');if(cd){go('#/about');return}
 if(t.closest('#btnSettings')){go('#/settings');return}});
 document.addEventListener('input',function(e){
  if(e.target.id==='setName'){uname=e.target.value.slice(0,40);save();return}
