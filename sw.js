@@ -1,10 +1,11 @@
-const CACHE = 'smart-order-v3-receipt';
+const CACHE = 'smart-order-v4-install-lowcost';
 
 const SHELL = [
-  './',
   './index.html',
   './data.json',
-  './manifest.json'
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png'
 ];
 
 self.addEventListener('install', e => {
@@ -24,14 +25,26 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
+  if (e.request.method !== 'GET') return;
   const url = new URL(e.request.url);
 
+  // Only own Smart Order assets belong in the app cache.
+  if (url.origin !== self.location.origin) return;
+
   // version.json always goes to the network and is never cached.
-  // This is the 30-day sync check — it must never be served stale.
+  // The app only requests this about once a week; it must never be served stale.
   if (url.pathname.endsWith('version.json')) {
     e.respondWith(fetch(e.request).catch(() => new Response('{}', {
       headers: { 'Content-Type': 'application/json' }
     })));
+    return;
+  }
+
+  // Navigations always use the cached app shell after the first successful visit.
+  if (e.request.mode === 'navigate') {
+    e.respondWith(
+      caches.match('./index.html').then(hit => hit || fetch(e.request))
+    );
     return;
   }
 
