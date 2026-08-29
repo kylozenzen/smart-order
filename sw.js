@@ -1,4 +1,4 @@
-const CACHE = 'smart-order-v5-simple-settings';
+const CACHE = 'smart-order-v6-simple';
 
 const SHELL = [
   './index.html',
