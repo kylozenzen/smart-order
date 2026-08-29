@@ -4,886 +4,131 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Smart Order</title>
-<meta name="description" content="Find what actually fits your goal at the drive-thru.">
+<meta name="description" content="Smart Picks for eating out, with transparent nutrition data and order-level changes.">
 <link rel="manifest" href="./manifest.json">
-<meta name="theme-color" content="#14181C">
+<meta name="theme-color" content="#171717">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --ink:      #14181C;
-    --paper:    #F1F3EE;
-    --panel:    #FFFFFF;
-    --rule:     #D5DAD1;
-    --muted:    #6B7269;
-    --pass:     #1D6B47;
-    --caution:  #B3690F;
-    --fail:     #A93B32;
-    --flag:     #E0A93B;
-
-    --display: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
-    --body:    'Barlow', system-ui, -apple-system, sans-serif;
-    --mono:    'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
-  }
-
-  * { box-sizing: border-box; }
-
-  html, body {
-    margin: 0; background: var(--paper); color: var(--ink);
-    font-family: var(--body); font-size: 16px; line-height: 1.45;
-    -webkit-text-size-adjust: 100%;
-  }
-
-  .wrap { max-width: 560px; margin: 0 auto; padding: 0 14px 80px; }
-
-  button { font: inherit; cursor: pointer; }
-  .hidden { display: none !important; }
-
-  /* ============================ ONBOARDING ============================ */
-  #onboard {
-    position: fixed; inset: 0; z-index: 60; background: var(--paper);
-    display: flex; flex-direction: column; overflow-y: auto;
-  }
-  .ob-inner {
-    max-width: 560px; width: 100%; margin: 0 auto; flex: 1;
-    display: flex; flex-direction: column;
-    padding: calc(24px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom));
-  }
-  .ob-step { flex: 1; display: flex; flex-direction: column; }
-
-  .ob-count {
-    font-family: var(--mono); font-size: 11px; letter-spacing: .1em;
-    text-transform: uppercase; color: var(--muted); margin-bottom: 18px;
-  }
-  .ob-inner h2 {
-    font-family: var(--display); font-weight: 700; font-size: 38px; line-height: 1.02;
-    letter-spacing: .01em; text-transform: uppercase; margin: 0 0 14px;
-  }
-  .ob-inner p { font-size: 16px; margin: 0 0 14px; color: var(--ink); }
-  .ob-inner p.sub { color: var(--muted); font-size: 15px; }
-
-  .ob-list { list-style: none; margin: 6px 0 18px; padding: 0; }
-  .ob-list li {
-    font-size: 15px; padding: 9px 0 9px 26px; position: relative;
-    border-bottom: 1px solid var(--rule);
-  }
-  .ob-list li::before {
-    content: "→"; position: absolute; left: 0; top: 9px;
-    font-family: var(--mono); color: var(--pass); font-size: 13px;
-  }
-
-  .fineprint {
-    background: var(--panel); border: 1px solid var(--rule);
-    border-left: 3px solid var(--flag); padding: 14px; margin-bottom: 16px;
-  }
-  .fineprint li {
-    list-style: none; font-size: 14px; padding: 7px 0;
-    border-bottom: 1px dashed var(--rule); color: var(--ink);
-  }
-  .fineprint ul { margin: 0; padding: 0; }
-  .fineprint li:last-child { border-bottom: 0; }
-  .fineprint b { font-weight: 600; }
-
-  .pickgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
-  .pick {
-    display: flex; align-items: center; gap: 8px; padding: 13px 12px;
-    background: var(--panel); border: 1.5px solid var(--rule); text-align: left;
-    font-family: var(--display); font-weight: 600; font-size: 17px;
-    letter-spacing: .03em; text-transform: uppercase; min-height: 52px;
-  }
-  .pick[aria-pressed="true"] { border-color: var(--ink); background: var(--ink); color: var(--paper); }
-  .pick .tick { font-family: var(--mono); font-size: 13px; opacity: 0; }
-  .pick[aria-pressed="true"] .tick { opacity: 1; }
-
-  .ob-actions { margin-top: auto; padding-top: 12px; }
-  .btn {
-    display: block; width: 100%; background: var(--ink); color: var(--paper);
-    border: 0; padding: 16px; font-family: var(--display); font-weight: 700;
-    font-size: 19px; letter-spacing: .07em; text-transform: uppercase; min-height: 54px;
-  }
-  .btn.ghost { background: transparent; color: var(--muted); border: 1.5px solid var(--rule); margin-top: 8px; font-size: 15px; padding: 11px; min-height: 44px; }
-  .btn:focus-visible, .pick:focus-visible, .chip:focus-visible,
-  .chaincard:focus-visible, .iconbtn:focus-visible { outline: 3px solid var(--caution); outline-offset: 2px; }
-
-  /* ============================ HEADER ============================ */
-  header {
-    position: sticky; top: 0; z-index: 20; background: var(--ink); color: var(--paper);
-    margin: 0 -14px; padding: calc(11px + env(safe-area-inset-top)) 14px 11px;
-  }
-  .brand { display: flex; align-items: center; gap: 10px; }
-  .brand h1 {
-    font-family: var(--display); font-weight: 700; font-size: 27px;
-    letter-spacing: .04em; text-transform: uppercase; margin: 0; line-height: 1; flex: 1;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  .iconbtn {
-    background: transparent; border: 1.5px solid #3A4147; color: var(--paper);
-    font-family: var(--mono); font-size: 11px; letter-spacing: .06em;
-    text-transform: uppercase; padding: 8px 9px; min-height: 36px; flex: 0 0 auto;
-  }
-  .stamp {
-    font-family: var(--mono); font-size: 10px; letter-spacing: .05em;
-    text-transform: uppercase; color: #9BA49A; margin-top: 6px;
-  }
-  .stamp b { color: var(--paper); font-weight: 500; }
-
-  /* ============================ SEARCH ============================ */
-  .searchbar { margin: 12px 0 4px; position: relative; }
-  .searchbar input {
-    width: 100%; font-family: var(--body); font-size: 16px; padding: 13px 14px;
-    border: 1.5px solid var(--rule); background: var(--panel); color: var(--ink);
-    border-radius: 0; -webkit-appearance: none; min-height: 48px;
-  }
-  .searchbar input:focus { outline: 0; border-color: var(--ink); }
-  .searchbar input::placeholder { color: var(--muted); }
-
-  /* ============================ CHIPS ============================ */
-  .chiprow {
-    display: flex; gap: 7px; overflow-x: auto; margin: 0 -14px; padding: 11px 14px;
-    scrollbar-width: none;
-  }
-  .chiprow::-webkit-scrollbar { display: none; }
-  .chip {
-    flex: 0 0 auto; font-family: var(--display); font-weight: 600; font-size: 15px;
-    letter-spacing: .05em; text-transform: uppercase; padding: 8px 13px;
-    border: 1.5px solid var(--ink); background: transparent; color: var(--ink); min-height: 38px;
-  }
-  .chip[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
-  .chiprow.cats .chip { border-color: var(--rule); color: var(--muted); font-size: 14px; }
-  .chiprow.cats .chip[aria-pressed="true"] { border-color: var(--ink); background: transparent; color: var(--ink); }
-
-  .goalwrap { position: sticky; top: 0; z-index: 15; background: var(--paper); border-bottom: 1px solid var(--rule); }
-  .rule-note { font-family: var(--mono); font-size: 11px; color: var(--muted); padding: 9px 0 0; }
-
-  /* ============================ HOME ============================ */
-  .sechead {
-    font-family: var(--display); font-weight: 700; font-size: 15px;
-    letter-spacing: .12em; text-transform: uppercase; color: var(--muted);
-    margin: 24px 0 8px; display: flex; justify-content: space-between; align-items: center;
-  }
-  .sechead button {
-    background: 0; border: 0; font-family: var(--mono); font-size: 11px;
-    letter-spacing: .06em; text-transform: uppercase; color: var(--ink);
-    text-decoration: underline; padding: 4px;
-  }
-
-  .chaincard {
-    display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
-    background: var(--panel); border: 1px solid var(--rule); border-left: 3px solid var(--ink);
-    padding: 14px 12px; margin-bottom: 8px; min-height: 62px; color: var(--ink);
-  }
-  .chaincard .nm {
-    font-family: var(--display); font-weight: 700; font-size: 21px;
-    letter-spacing: .04em; text-transform: uppercase; flex: 1; line-height: 1.1;
-  }
-  .chaincard .meta {
-    font-family: var(--mono); font-size: 11px; color: var(--muted);
-    text-align: right; white-space: nowrap;
-  }
-  .chaincard .meta .fit { color: var(--pass); font-weight: 700; display: block; }
-  .chaincard .arw { font-family: var(--mono); color: var(--muted); font-size: 15px; }
-  .chaincard.pinned { border-left-color: var(--flag); }
-
-  .pinbtn {
-    background: 0; border: 0; padding: 8px; font-family: var(--mono);
-    font-size: 15px; line-height: 1; color: var(--rule); flex: 0 0 auto;
-  }
-  .pinbtn[aria-pressed="true"] { color: var(--flag); }
-
-  /* ============================ CHAIN VIEW ============================ */
-  .backbar {
-    display: flex; align-items: center; gap: 10px; padding: 12px 0 4px;
-  }
-  .backbar button {
-    background: 0; border: 0; font-family: var(--mono); font-size: 12px;
-    letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 8px 8px 8px 0;
-  }
-  .unverified {
-    font-family: var(--mono); font-size: 9px; letter-spacing: .08em; text-transform: uppercase;
-    color: var(--ink); background: var(--flag); padding: 3px 6px; white-space: nowrap;
-  }
-  .chain-tips { list-style: none; margin: 10px 0 0; padding: 0; }
-  .chain-tips li {
-    font-size: 14px; color: var(--muted); padding: 3px 0 3px 16px; position: relative;
-  }
-  .chain-tips li::before {
-    content: "→"; position: absolute; left: 0; color: var(--ink); font-family: var(--mono); font-size: 12px;
-  }
-
-  /* ============================ ITEM CARD ============================ */
-  .item { background: var(--panel); border: 1px solid var(--rule); margin-top: 10px; padding: 12px; }
-  .item.dim { opacity: .55; }
-  .item-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
-  .item-name { font-weight: 600; font-size: 17px; line-height: 1.25; margin: 0; }
-  .item-note { font-size: 13px; color: var(--muted); margin: 2px 0 0; }
-  .item-chain { font-family: var(--mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 3px; }
-
-  .badge {
-    flex: 0 0 auto; font-family: var(--mono); font-size: 10px; font-weight: 700;
-    letter-spacing: .05em; text-transform: uppercase; padding: 4px 6px;
-    border: 1.5px solid currentColor; white-space: nowrap;
-  }
-  .badge.pass { color: var(--pass); }
-  .badge.partial { color: var(--caution); }
-  .badge.fail { color: var(--fail); }
-  .badge.unknown { color: var(--muted); }
-  .line .v.none { color: var(--rule); }
-  .chaincard .meta .nofit { color: var(--muted); font-weight: 700; display: block; }
-  .nodata {
-    margin-top: 16px; padding: 10px 12px; background: var(--panel);
-    border: 1px dashed var(--rule); font-size: 13px; color: var(--muted);
-  }
-  .nodata b {
-    display: block; font-family: var(--display); font-size: 15px; letter-spacing: .06em;
-    text-transform: uppercase; color: var(--ink); margin-bottom: 2px;
-  }
-
-  .ticket { font-family: var(--mono); font-size: 13px; margin-top: 10px; }
-  .line { display: flex; justify-content: space-between; gap: 8px; padding: 2px 0; font-variant-numeric: tabular-nums; }
-  .line .k { color: var(--muted); }
-  .line .v { font-weight: 500; }
-  .line .v.hit { color: var(--pass); font-weight: 700; }
-  .line .v.miss { color: var(--fail); font-weight: 700; }
-  .tear { border: 0; border-top: 1px dashed var(--rule); margin: 9px 0; }
-
-  .mods-title {
-    font-family: var(--display); font-weight: 600; font-size: 14px;
-    letter-spacing: .09em; text-transform: uppercase; color: var(--muted); margin: 0 0 4px;
-  }
-  .mod { display: flex; align-items: center; gap: 9px; padding: 7px 0; cursor: pointer; min-height: 38px; }
-  .mod input { width: 19px; height: 19px; accent-color: var(--pass); flex: 0 0 auto; margin: 0; }
-  .mod .lbl { font-family: var(--body); font-size: 14px; flex: 1; }
-  .mod .dlt { font-family: var(--mono); font-size: 11px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .mod input:focus-visible { outline: 3px solid var(--caution); outline-offset: 2px; }
-
-  .total { border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink); padding: 6px 0; margin-top: 8px; }
-  .total .line { padding: 1px 0; font-weight: 700; }
-  .total .k { color: var(--ink); }
-
-  .addons { margin-top: 14px; border-left: 3px solid var(--caution); background: #FBF6EC; padding: 10px 12px; }
-  .addons h3 {
-    font-family: var(--display); font-weight: 600; font-size: 15px; letter-spacing: .07em;
-    text-transform: uppercase; margin: 0 0 6px; color: var(--caution);
-  }
-  .addon { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; padding: 3px 0; }
-  .addon .cost { font-family: var(--mono); font-size: 12px; color: var(--caution); font-weight: 700; white-space: nowrap; }
-  .addon small { display: block; color: var(--muted); font-size: 12px; }
-
-  .tips { margin-top: 32px; border-top: 2px solid var(--ink); padding-top: 14px; }
-  .tips h2 {
-    font-family: var(--display); font-weight: 700; font-size: 20px;
-    letter-spacing: .06em; text-transform: uppercase; margin: 0 0 8px;
-  }
-  .tips p { font-size: 14px; margin: 0 0 12px; padding-left: 20px; position: relative; }
-  .tips p::before { content: "✓"; position: absolute; left: 0; top: 0; color: var(--pass); font-family: var(--mono); font-weight: 700; }
-
-  .empty { text-align: center; padding: 38px 20px; color: var(--muted); font-size: 15px; }
-  .empty b {
-    display: block; font-family: var(--display); font-size: 22px; letter-spacing: .05em;
-    text-transform: uppercase; color: var(--ink); margin-bottom: 6px;
-  }
-
-  #toast {
-    position: fixed; left: 14px; right: 14px; bottom: calc(14px + env(safe-area-inset-bottom));
-    max-width: 532px; margin: 0 auto; background: var(--ink); color: var(--paper);
-    font-family: var(--mono); font-size: 12px; padding: 12px 14px; z-index: 40;
-    transform: translateY(160%); transition: transform .28s ease;
-    display: flex; justify-content: space-between; align-items: center; gap: 12px;
-  }
-  #toast.up { transform: translateY(0); }
-  #toast button {
-    background: var(--paper); color: var(--ink); border: 0; padding: 6px 10px;
-    font-family: var(--mono); font-size: 11px; font-weight: 700; text-transform: uppercase;
-  }
-
-  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+:root{
+  --ink:#171717;--paper:#f4f0e7;--ticket:#fffdf7;--soft:#ebe5d8;--rule:#d9d0c1;--muted:#746e64;
+  --pass:#246a46;--caution:#a96514;--fail:#a33d34;--blue:#385f77;
+  --display:'Barlow Condensed','Arial Narrow',system-ui,sans-serif;--body:'Barlow',system-ui,-apple-system,sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box}html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;-webkit-text-size-adjust:100%}
+button,input{font:inherit}button{cursor:pointer}.hidden{display:none!important}.wrap{max-width:620px;margin:0 auto;padding:0 14px 96px}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid #d69335;outline-offset:2px}
+header{position:sticky;top:0;z-index:30;background:var(--ink);color:var(--ticket);margin:0 -14px;padding:calc(10px + env(safe-area-inset-top)) 14px 10px;border-bottom:1px solid #333}
+.brandrow{display:flex;align-items:center;gap:8px}.brandlock{flex:1;min-width:0}.brandname{font-family:var(--display);font-weight:700;font-size:27px;line-height:1;text-transform:uppercase;letter-spacing:.055em}.brandsub{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#aaa;margin-top:4px}
+.iconbtn{border:1px solid #494949;background:transparent;color:var(--ticket);padding:8px 9px;font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;min-height:36px}.orderbtn{position:relative}.ordercount{display:inline-flex;align-items:center;justify-content:center;background:var(--ticket);color:var(--ink);min-width:19px;height:19px;padding:0 5px;border-radius:10px;margin-left:5px;font-size:9px;font-weight:700}
+.searchbar{margin:14px 0 5px}.searchbar input{width:100%;border:1px solid var(--rule);background:var(--ticket);padding:13px 14px;min-height:48px;border-radius:0;color:var(--ink)}.searchbar input::placeholder{color:#8b857c}
+.goalwrap{position:sticky;top:57px;z-index:15;background:var(--paper);border-bottom:1px solid var(--rule);padding-bottom:8px}.chiprow{display:flex;gap:7px;overflow-x:auto;margin:0 -14px;padding:10px 14px 5px;scrollbar-width:none}.chiprow::-webkit-scrollbar{display:none}.chip{flex:0 0 auto;border:1.5px solid var(--ink);background:transparent;color:var(--ink);padding:8px 12px;min-height:38px;font-family:var(--display);font-weight:600;font-size:15px;letter-spacing:.05em;text-transform:uppercase}.chip[aria-pressed="true"]{background:var(--ink);color:var(--ticket)}.chiprow.cats{padding-top:6px}.chiprow.cats .chip{border-color:var(--rule);color:var(--muted);font-size:13px;padding:6px 10px;min-height:32px}.chiprow.cats .chip[aria-pressed="true"]{border-color:var(--ink);color:var(--ink);background:transparent}.rule-note{font-family:var(--mono);font-size:10px;color:var(--muted);padding:2px 0 0;line-height:1.45}
+.receipt{position:relative;background:var(--ticket);border:1px solid var(--rule);box-shadow:0 5px 16px rgba(40,30,15,.05);padding:18px 16px 22px;margin-top:14px}.receipt::after{content:"";position:absolute;left:-1px;right:-1px;bottom:-7px;height:8px;background:linear-gradient(135deg,transparent 5px,var(--ticket) 0) 0 0/10px 10px,linear-gradient(225deg,transparent 5px,var(--ticket) 0) 0 0/10px 10px;background-position:left bottom,right bottom;background-repeat:repeat-x;border-left:1px solid transparent;border-right:1px solid transparent}.receipt-kicker{font-family:var(--mono);font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted)}.receipt-title{font-family:var(--display);font-size:34px;line-height:1;font-weight:700;letter-spacing:.035em;text-transform:uppercase;margin:6px 0}.receipt-copy{font-size:15px;color:#48433d;margin:6px 0 0}.receipt-rule{border:0;border-top:1px dashed var(--rule);margin:14px 0}.receipt-row{display:flex;justify-content:space-between;gap:12px;font-family:var(--mono);font-size:11px;padding:3px 0}.receipt-row .label{color:var(--muted)}.receipt-row strong{text-align:right;font-weight:700}
+.homeintro .receipt-title{font-size:39px}.homeintro .bigline{font-family:var(--display);font-size:19px;font-weight:600;text-transform:uppercase;letter-spacing:.045em;margin-top:12px}.homeintro .micro{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:5px}
+.sechead{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin:24px 0 8px;font-family:var(--display);font-weight:700;font-size:16px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted)}.sechead small{font-family:var(--mono);font-size:9px;font-weight:500;letter-spacing:.04em;text-transform:none;color:var(--muted)}
+.chainwrap{display:flex;align-items:stretch;gap:0;margin-bottom:9px}.chaincard{width:100%;text-align:left;background:var(--ticket);border:1px solid var(--rule);border-left:3px solid var(--ink);padding:13px 12px;color:var(--ink);display:grid;grid-template-columns:1fr auto;gap:7px 10px;min-height:76px}.chaincard.pinned{border-left-color:#cf9636}.chainname{font-family:var(--display);font-size:22px;font-weight:700;text-transform:uppercase;letter-spacing:.035em;line-height:1.05}.chainmeta{font-family:var(--mono);font-size:10px;color:var(--muted);text-align:right}.chainfit{color:var(--pass);font-weight:700}.chainstatus{grid-column:1/-1;display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:9px;color:var(--muted);line-height:1.3}.dot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex:0 0 auto}.dot.verified{background:var(--pass)}.dot.partial{background:var(--caution)}.dot.limited,.dot.recheck{background:var(--fail)}.pinbtn{border:0;background:transparent;color:#cfc7ba;padding:0 9px;font-size:16px}.pinbtn[aria-pressed="true"]{color:#c68d2c}
+.backbar{display:flex;align-items:center;gap:9px;padding:12px 0 0}.backbar button{border:0;background:transparent;padding:7px 7px 7px 0;font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}.backbar .pinbtn{margin-left:auto;color:#c8bead}.backbar .pinbtn[aria-pressed="true"]{color:#c68d2c}
+.statuspill{display:inline-flex;align-items:center;gap:6px;border:1px solid currentColor;padding:4px 6px;font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.045em;text-transform:uppercase}.statuspill.verified{color:var(--pass)}.statuspill.partial{color:var(--caution)}.statuspill.limited,.statuspill.recheck{color:var(--fail)}
+.data-card{background:#fbf7ee;border:1px solid var(--rule);padding:12px;margin:12px 0}.data-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.data-title{font-family:var(--display);font-size:17px;font-weight:700;text-transform:uppercase;letter-spacing:.055em}.data-summary{font-size:12px;color:var(--muted);margin:5px 0 0}.coverage-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px 12px;margin-top:10px}.coverage-line{font-family:var(--mono);font-size:10px;display:flex;justify-content:space-between;gap:8px;border-bottom:1px dashed var(--rule);padding:3px 0}.coverage-line span:first-child{color:var(--muted)}.coverage-line .good{color:var(--pass);font-weight:700}.coverage-line .warn{color:var(--caution);font-weight:700}.coverage-line .bad{color:var(--fail);font-weight:700}.data-card details{border-top:1px dashed var(--rule);margin-top:10px;padding-top:8px}.data-card summary{font-family:var(--mono);font-size:10px;cursor:pointer;color:var(--blue)}.data-detail{font-size:12px;color:var(--muted);margin:8px 0 0}.data-detail b{color:var(--ink)}
+.chain-tips{list-style:none;padding:0;margin:10px 0}.chain-tips li{font-size:13px;color:var(--muted);position:relative;padding:3px 0 3px 15px}.chain-tips li::before{content:"→";position:absolute;left:0;font-family:var(--mono);color:var(--ink)}
+.grouphead{margin:22px 0 8px}.grouphead .label{font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:.075em;text-transform:uppercase}.grouphead .explain{font-size:12px;color:var(--muted);margin-top:2px}.grouphead.best .label{color:var(--pass)}.grouphead.smarter .label{color:var(--caution)}.grouphead.unknown .label{color:var(--blue)}
+.item{background:var(--ticket);border:1px solid var(--rule);margin-top:9px;padding:13px;position:relative}.item.best{border-left:3px solid var(--pass)}.item.smarter{border-left:3px solid var(--caution)}.item.unknown{border-left:3px solid var(--blue)}.item.other{border-left:3px solid #b9b2a6}.item-head{display:flex;gap:10px;align-items:flex-start;justify-content:space-between}.item-name{margin:0;font-size:17px;line-height:1.2}.item-note{font-size:12px;color:var(--muted);margin:3px 0 0}.item-chain{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 3px}.badge{flex:0 0 auto;border:1px solid currentColor;padding:4px 5px;font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:.045em;text-transform:uppercase;white-space:nowrap}.badge.best{color:var(--pass)}.badge.smarter{color:var(--caution)}.badge.unknown{color:var(--blue)}.badge.other{color:var(--muted)}
+.ticket{font-family:var(--mono);font-size:11px;margin-top:10px}.line{display:flex;justify-content:space-between;gap:8px;padding:2px 0;font-variant-numeric:tabular-nums}.line .k{color:var(--muted)}.line .v{font-weight:500}.line .v.hit{color:var(--pass);font-weight:700}.line .v.miss{color:var(--fail);font-weight:700}.line .v.none{color:#aaa}.tear{border:0;border-top:1px dashed var(--rule);margin:9px 0}.mods-title{font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 4px}.mod{display:flex;align-items:center;gap:8px;padding:6px 0;min-height:36px;cursor:pointer}.mod input{width:18px;height:18px;accent-color:var(--pass);margin:0}.mod .lbl{font-family:var(--body);font-size:13px;flex:1}.mod .dlt{font-family:var(--mono);font-size:10px;color:var(--muted);white-space:nowrap}.order-total{background:#f6f1e6;border:1px solid var(--rule);padding:8px 9px;margin-top:8px}.order-total .headline{font-family:var(--display);font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}.item-actions{display:flex;gap:7px;margin-top:10px}.smallbtn{border:1px solid var(--ink);background:var(--ink);color:var(--ticket);padding:9px 10px;font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:.055em;text-transform:uppercase;flex:1}.smallbtn.ghost{background:transparent;color:var(--ink)}
+.empty{background:var(--ticket);border:1px dashed var(--rule);padding:16px;margin-top:14px;color:var(--muted);font-size:13px}.empty b{display:block;font-family:var(--display);font-size:18px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink);margin-bottom:3px}.empty strong{color:var(--ink)}
+.addons{margin-top:24px}.addons h3{font-family:var(--display);font-size:18px;text-transform:uppercase;letter-spacing:.07em}.addon{display:flex;justify-content:space-between;gap:10px;border-bottom:1px dashed var(--rule);padding:8px 0;font-size:13px}.addon small{display:block;color:var(--muted)}.addon .cost{font-family:var(--mono);font-size:10px;text-align:right;color:var(--fail);white-space:nowrap}
+.order-line{border-bottom:1px dashed var(--rule);padding:11px 0}.order-line:last-child{border-bottom:0}.order-line-top{display:flex;justify-content:space-between;gap:10px}.order-line-name{font-weight:600}.order-line-chain{font-family:var(--mono);font-size:9px;text-transform:uppercase;color:var(--muted)}.order-line-meta{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:3px}.removebtn{border:0;background:transparent;color:var(--fail);font-family:var(--mono);font-size:9px;text-transform:uppercase;padding:2px}.totalbox{border-top:2px solid var(--ink);border-bottom:2px solid var(--ink);padding:10px 0;margin-top:14px}.totalbox .grand{font-family:var(--display);font-size:21px;font-weight:700;text-transform:uppercase;display:flex;justify-content:space-between}.smartnote{border-left:3px solid var(--pass);padding:9px 10px;background:#f0f5ef;margin-top:12px;font-size:12px}.footer-actions{display:flex;gap:8px;margin-top:14px}.footer-actions .smallbtn{min-height:42px}
+.tips{background:var(--ticket);border:1px solid var(--rule);padding:14px;margin-top:24px}.tips h2{font-family:var(--display);font-size:18px;text-transform:uppercase;letter-spacing:.07em;margin:0 0 8px}.tips p{font-size:12px;color:var(--muted);margin:6px 0;border-top:1px dashed var(--rule);padding-top:6px}.tips p:first-of-type{border-top:0}
+#toast{position:fixed;left:50%;bottom:calc(15px + env(safe-area-inset-bottom));z-index:80;transform:translate(-50%,150%);background:var(--ink);color:var(--ticket);padding:10px 11px;width:calc(100% - 28px);max-width:560px;display:flex;align-items:center;gap:8px;transition:transform .2s ease;font-size:12px;box-shadow:0 4px 18px rgba(0,0,0,.22)}#toast.up{transform:translate(-50%,0)}#toastMsg{flex:1}#toast button{border:1px solid #666;background:transparent;color:var(--ticket);font-family:var(--mono);font-size:9px;padding:5px 7px}
+#onboard{position:fixed;inset:0;z-index:70;background:var(--paper);overflow:auto}.ob-inner{max-width:580px;margin:0 auto;padding:calc(24px + env(safe-area-inset-top)) 18px calc(30px + env(safe-area-inset-bottom));min-height:100%;display:flex;flex-direction:column}.ob-receipt{background:var(--ticket);border:1px solid var(--rule);padding:20px 17px 24px;margin:auto 0}.ob-count{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}.ob-receipt h2{font-family:var(--display);font-size:38px;line-height:1;text-transform:uppercase;letter-spacing:.035em;margin:8px 0 12px}.ob-receipt p{margin:7px 0;font-size:15px}.ob-receipt .sub{color:var(--muted)}.ob-list{list-style:none;padding:0;margin:14px 0}.ob-list li{border-top:1px dashed var(--rule);padding:8px 0 8px 17px;position:relative;font-size:13px}.ob-list li::before{content:"→";position:absolute;left:0;font-family:var(--mono);color:var(--pass)}.btn{width:100%;border:0;background:var(--ink);color:var(--ticket);font-family:var(--display);font-weight:700;font-size:18px;letter-spacing:.07em;text-transform:uppercase;padding:14px;min-height:52px;margin-top:14px}.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--rule);font-size:14px;min-height:44px;padding:10px}.pickgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:12px}.pick{border:1px solid var(--rule);background:transparent;padding:10px;text-align:left;font-family:var(--display);font-weight:600;text-transform:uppercase;font-size:14px}.pick[aria-pressed="true"]{background:var(--ink);color:var(--ticket);border-color:var(--ink)}
+@media(max-width:420px){.coverage-grid{grid-template-columns:1fr}.receipt-title{font-size:31px}.homeintro .receipt-title{font-size:35px}.chainname{font-size:20px}.goalwrap{top:57px}}@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
 </style>
 </head>
 <body>
-
-<!-- ONBOARDING -->
 <div id="onboard" class="hidden"><div class="ob-inner" id="obInner"></div></div>
-
-<!-- APP -->
 <div class="wrap" id="shell">
   <header>
-    <div class="brand">
-      <h1 id="hTitle">Smart Order</h1>
-      <button class="iconbtn" id="btnInfo" type="button" aria-label="About and disclaimer">Info</button>
+    <div class="brandrow">
+      <div class="brandlock"><div class="brandname" id="hTitle">Smart Order</div><div class="brandsub" id="stamp">Loading nutrition data…</div></div>
+      <button class="iconbtn orderbtn" id="btnOrder" type="button">My order <span class="ordercount" id="orderCount">0</span></button>
+      <button class="iconbtn" id="btnInfo" type="button">Info</button>
     </div>
-    <div class="stamp" id="stamp">Loading…</div>
   </header>
   <main id="app"></main>
 </div>
-
-<div id="toast" role="status" aria-live="polite">
-  <span id="toastMsg"></span>
-  <button id="toastBtn" type="button">OK</button>
-</div>
-
+<div id="toast" role="status" aria-live="polite"><span id="toastMsg"></span><button id="toastBtn" type="button">OK</button></div>
 <script>
-(function () {
-  'use strict';
-
-  var DISCLAIMER_VERSION = '1';
-
-  var DATA = null;
-  var goal   = localStorage.getItem('so:goal') || 'none';
-  var pins   = JSON.parse(localStorage.getItem('so:pins')  || '[]');
-  var picks  = JSON.parse(localStorage.getItem('so:picks') || '{}');
-  var query  = '';
-  var cat    = 'all';
-  var obStep = 0;
-  var obPicks = pins.slice();
-  var deferredInstall = null;
-
-  var GOALS = [
-    { id: 'none',    label: 'All items' },
-    { id: 'protein', label: 'High protein' },
-    { id: 'sodium',  label: 'Low sodium' },
-    { id: 'carbs',   label: 'Low carb' },
-    { id: 'cal',     label: 'Under 500' }
-  ];
-
-  var FIELDS = ['cal','protein_g','net_carbs_g','fat_g','sat_fat_g','sodium_mg','sugar_g'];
-
-  /* ------------------------------------------------ math */
-  // A null field means "we don't have this number" — never coerce it to 0,
-  // or an item with no sodium data would silently pass the low-sodium filter.
-  function base(item) {
-    var o = {};
-    FIELDS.forEach(function (f) {
-      o[f] = (item[f] === null || item[f] === undefined) ? null : item[f];
-    });
-    return o;
-  }
-
-  var GOAL_FIELD = { protein: 'protein_g', sodium: 'sodium_mg', carbs: 'net_carbs_g', cal: 'cal' };
-  var GOAL_NOUN  = { protein: 'protein', sodium: 'sodium', carbs: 'carb', cal: 'calorie' };
-
-  // Does this item have the number the active goal needs?
-  function known(v, g) {
-    if (g === 'none') return true;
-    if (g === 'protein') return typeof v.protein_g === 'number' && typeof v.cal === 'number';
-    return typeof v[GOAL_FIELD[g]] === 'number';
-  }
-
-  function apply(vals, mods, idxs) {
-    var o = {}; FIELDS.forEach(function (f) { o[f] = vals[f]; });
-    (idxs || []).forEach(function (i) {
-      var d = (mods[i] && mods[i].delta) || {};
-      FIELDS.forEach(function (f) {
-        if (d[f] && typeof o[f] === 'number') o[f] += d[f];
-      });
-    });
-    FIELDS.forEach(function (f) {
-      if (typeof o[f] === 'number') o[f] = Math.max(0, Math.round(o[f] * 10) / 10);
-    });
-    return o;
-  }
-
-  function passes(v, g) {
-    var t = DATA.thresholds;
-    if (!known(v, g)) return false;
-    if (g === 'protein') {
-      if (v.cal <= 0) return false;
-      return v.protein_g >= t.protein.min_g && (v.protein_g / v.cal) * 100 >= t.protein.min_g_per_100cal;
-    }
-    if (g === 'sodium') return v.sodium_mg <= t.sodium.max_mg;
-    if (g === 'carbs')  return v.net_carbs_g <= t.carbs.max_net_g;
-    if (g === 'cal')    return v.cal <= t.calories.max;
-    return true;
-  }
-
-  function improves(mod, g) {
-    var d = mod.delta || {};
-    if (g === 'sodium')  return (d.sodium_mg || 0) < 0;
-    if (g === 'carbs')   return (d.net_carbs_g || 0) < 0;
-    if (g === 'cal')     return (d.cal || 0) < 0;
-    if (g === 'protein') {
-      var dp = d.protein_g || 0, dc = d.cal || 0;
-      if (dc < 0 && dp >= dc * 0.06) return true;
-      return dp > 0 && dc <= 0;
-    }
-    return false;
-  }
-
-  function suggest(item, g) {
-    var mods = item.mods || [], cur = base(item), out = [];
-    for (var i = 0; i < mods.length; i++) {
-      if (passes(cur, g)) break;
-      if (!improves(mods[i], g)) continue;
-      out.push(i);
-      cur = apply(base(item), mods, out);
-    }
-    return passes(cur, g) ? out : null;
-  }
-
-  function fits(item, g) {
-    if (g === 'none') return true;
-    if (!known(base(item), g)) return false;
-    return passes(base(item), g) || !!suggest(item, g);
-  }
-
-  // Item can't be judged against this goal because the number is missing.
-  function unknownFor(item, g) { return g !== 'none' && !known(base(item), g); }
-
-  function n(x) {
-    if (typeof x !== 'number') return '—';
-    return Math.round(x).toLocaleString();
-  }
-
-  function deltaStr(d) {
-    var p = [];
-    if (d.cal)         p.push((d.cal > 0 ? '+' : '') + n(d.cal) + ' cal');
-    if (d.sodium_mg)   p.push((d.sodium_mg > 0 ? '+' : '') + n(d.sodium_mg) + 'mg');
-    if (d.net_carbs_g) p.push((d.net_carbs_g > 0 ? '+' : '') + n(d.net_carbs_g) + 'c');
-    if (d.protein_g)   p.push((d.protein_g > 0 ? '+' : '') + n(d.protein_g) + 'p');
-    if (d.sugar_g && !d.cal) p.push((d.sugar_g > 0 ? '+' : '') + n(d.sugar_g) + 'g sug');
-    return p.slice(0, 3).join(' · ');
-  }
-
-  function esc(s) {
-    return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
-      return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c];
-    });
-  }
-
-  function save() {
-    localStorage.setItem('so:goal', goal);
-    localStorage.setItem('so:pins', JSON.stringify(pins));
-    localStorage.setItem('so:picks', JSON.stringify(picks));
-  }
-
-  function chainById(id) {
-    for (var i = 0; i < DATA.chains.length; i++) if (DATA.chains[i].id === id) return DATA.chains[i];
-    return null;
-  }
-
-  /* ------------------------------------------------ onboarding */
-  var OB = [
-    function () {
-      return '<div class="ob-step">' +
-        '<div class="ob-count">Step 1 of 3</div>' +
-        '<h2>Know before<br>you order</h2>' +
-        '<p>Pick what you care about — protein, sodium, carbs, calories — and see what actually clears it at each place.</p>' +
-        '<ul class="ob-list">' +
-          '<li>Every item shows how the numbers change when you change the order</li>' +
-          '<li>Nothing on the menu fits? It says so, instead of pretending</li>' +
-          '<li>Works with no signal once installed. No account, nothing leaves your phone</li>' +
-        '</ul>' +
-        '<div class="ob-actions"><button class="btn" data-ob="next">Next</button></div></div>';
-    },
-    function () {
-      return '<div class="ob-step">' +
-        '<div class="ob-count">Step 2 of 3</div>' +
-        '<h2>The honest part</h2>' +
-        '<p class="sub">Short, and worth reading once.</p>' +
-        '<div class="fineprint"><ul>' +
-          '<li><b>Numbers come from what each restaurant publishes.</b> They change without notice, and this app updates on its own schedule.</li>' +
-          '<li><b>Your actual order will vary.</b> Portions differ by location and by whoever is making it.</li>' +
-          '<li><b>No allergen information here.</b> If you have an allergy, ask the restaurant directly — every time.</li>' +
-          '<li><b>This is a reference tool, not advice.</b> It isn\'t medical or nutrition guidance. For anything that matters to your health, talk to a doctor or a dietitian.</li>' +
-          '<li><b>Chains marked "Seed data" haven\'t been verified yet.</b> You\'ll see the badge on the menu board.</li>' +
-        '</ul></div>' +
-        '<div class="ob-actions"><button class="btn" data-ob="next">Got it</button></div></div>';
-    },
-    function () {
-      var cards = DATA.chains.map(function (c) {
-        return '<button class="pick" type="button" data-pick="' + esc(c.id) + '" aria-pressed="' +
-          (obPicks.indexOf(c.id) > -1) + '"><span style="flex:1">' + esc(c.name) +
-          '</span><span class="tick">✓</span></button>';
-      }).join('');
-      var install = deferredInstall
-        ? '<button class="btn ghost" data-ob="install">Add to home screen</button>'
-        : (isIOS() ? '<p class="sub" style="margin-top:14px">To keep it offline: tap Share, then <b>Add to Home Screen</b>.</p>' : '');
-      return '<div class="ob-step">' +
-        '<div class="ob-count">Step 3 of 3</div>' +
-        '<h2>Your regulars</h2>' +
-        '<p class="sub">Pin the places you actually go. They\'ll sit at the top. You can change this any time.</p>' +
-        '<div class="pickgrid">' + cards + '</div>' +
-        '<div class="ob-actions"><button class="btn" data-ob="done">Start</button>' + install + '</div></div>';
-    }
-  ];
-
-  function isIOS() {
-    return /iP(hone|ad|od)/.test(navigator.userAgent) && !window.MSStream;
-  }
-
-  function renderOnboard() {
-    document.getElementById('onboard').classList.remove('hidden');
-    document.getElementById('shell').classList.add('hidden');
-    document.getElementById('obInner').innerHTML = OB[obStep]();
-    window.scrollTo(0, 0);
-  }
-
-  function finishOnboard() {
-    pins = obPicks.slice();
-    localStorage.setItem('so:agreed', DISCLAIMER_VERSION);
-    save();
-    document.getElementById('onboard').classList.add('hidden');
-    document.getElementById('shell').classList.remove('hidden');
-    go('#/');
-  }
-
-  /* ------------------------------------------------ shared pieces */
-  function ruleText() {
-    var t = DATA.thresholds;
-    if (goal === 'protein') return 'HIGH PROTEIN = ' + t.protein.min_g + 'g+, and at least ' + t.protein.min_g_per_100cal + 'g per 100 cal.';
-    if (goal === 'sodium')  return 'LOW SODIUM = ' + n(t.sodium.max_mg) + 'mg or less. Very little clears this.';
-    if (goal === 'carbs')   return 'LOW CARB = ' + t.carbs.max_net_g + 'g net carbs or less.';
-    if (goal === 'cal')     return 'UNDER 500 = ' + t.calories.max + ' calories or less, as ordered.';
-    return 'Pick a goal to see what fits — and what fits once you change the order.';
-  }
-
-  function goalChips() {
-    return '<div class="goalwrap"><div class="chiprow">' + GOALS.map(function (g) {
-      return '<button class="chip" type="button" data-goal="' + g.id + '" aria-pressed="' +
-        (goal === g.id) + '">' + esc(g.label) + '</button>';
-    }).join('') + '</div><div class="rule-note">' + esc(ruleText()) + '</div></div>';
-  }
-
-  function statsLine(v, g) {
-    function cell(label, val, target, ok) {
-      var missing = val === '—' || String(val).indexOf('—') === 0;
-      return '<div class="line"><span class="k">' + label + '</span><span class="v' +
-        (missing ? ' none' : (target ? (ok ? ' hit' : ' miss') : '')) + '">' + val + '</span></div>';
-    }
-    var t = DATA.thresholds;
-    return cell('Calories',  n(v.cal), g === 'cal', v.cal <= t.calories.max) +
-           cell('Protein',   n(v.protein_g) + ' g', g === 'protein', passes(v, 'protein')) +
-           cell('Net carbs', n(v.net_carbs_g) + ' g', g === 'carbs', v.net_carbs_g <= t.carbs.max_net_g) +
-           cell('Sodium',    n(v.sodium_mg) + ' mg', g === 'sodium', v.sodium_mg <= t.sodium.max_mg) +
-           cell('Sugar',     n(v.sugar_g) + ' g', false) +
-           cell('Sat fat',   n(v.sat_fat_g) + ' g', false);
-  }
-
-  function renderItem(chain, idx, showChain) {
-    var item = chain.items[idx];
-    var key = chain.id + ':' + idx;
-    var mods = item.mods || [];
-    var b = base(item);
-
-    if (!picks[key] && goal !== 'none' && !passes(b, goal)) {
-      var s = suggest(item, goal);
-      if (s && s.length) picks[key] = s;
-    }
-    var sel = picks[key] || [];
-    var v = apply(b, mods, sel);
-
-    var status = 'ok', badge = '';
-    if (goal !== 'none' && !known(b, goal)) {
-      status = 'unknown';
-      badge = '<span class="badge unknown">No ' + esc(GOAL_NOUN[goal]) + ' data</span>';
-    } else if (goal !== 'none') {
-      if (passes(b, goal))      { status = 'pass';    badge = '<span class="badge pass">Fits as is</span>'; }
-      else if (passes(v, goal)) { status = 'partial'; badge = '<span class="badge partial">Fits with changes</span>'; }
-      else if (suggest(item, goal)) { status = 'partial'; badge = '<span class="badge partial">Can fit</span>'; }
-      else { status = 'fail'; badge = '<span class="badge fail">Doesn\'t fit</span>'; }
-    }
-
-    var modHtml = mods.length
-      ? '<hr class="tear"><p class="mods-title">Order it this way</p>' + mods.map(function (m, i) {
-          return '<label class="mod"><input type="checkbox" data-key="' + key + '" data-mod="' + i + '"' +
-            (sel.indexOf(i) > -1 ? ' checked' : '') + '><span class="lbl">' + esc(m.label) +
-            '</span><span class="dlt">' + esc(deltaStr(m.delta || {})) + '</span></label>';
-        }).join('')
-      : '';
-
-    var totalHtml = sel.length
-      ? '<div class="total"><div class="line"><span class="k">As you\'d order it</span><span class="v">' +
-        n(v.cal) + ' cal · ' + n(v.protein_g) + 'p · ' + n(v.sodium_mg) + 'mg</span></div></div>'
-      : '';
-
-    return '<article class="item' + (status === 'fail' || status === 'unknown' ? ' dim' : '') + '" data-key="' + key + '">' +
-      '<div class="item-head"><div>' +
-      (showChain ? '<p class="item-chain">' + esc(chain.name) + '</p>' : '') +
-      '<h3 class="item-name">' + esc(item.name) + '</h3>' +
-      (item.note ? '<p class="item-note">' + esc(item.note) + '</p>' : '') +
-      '</div>' + badge + '</div>' +
-      '<div class="ticket">' + statsLine(v, goal) + modHtml + totalHtml + '</div></article>';
-  }
-
-  /* ------------------------------------------------ views */
-  function viewHome() {
-    return searchBar() + goalChips() + '<div id="results">' + homeResults() + '</div>';
-  }
-
-  function homeResults() {
-    var q = query.trim().toLowerCase();
-
-    // Search matches items across every chain.
-    if (q) {
-      var hits = [];
-      DATA.chains.forEach(function (c) {
-        c.items.forEach(function (it, i) {
-          if ((it.name + ' ' + (it.note || '') + ' ' + c.name).toLowerCase().indexOf(q) > -1 && fits(it, goal)) {
-            hits.push(renderItem(c, i, true));
-          }
-        });
-      });
-      return hits.length ? hits.join('') :
-        '<div class="empty"><b>No match</b>Nothing by that name fits the current goal. Try clearing the goal.</div>';
-    }
-
-    var pinned = DATA.chains.filter(function (c) { return pins.indexOf(c.id) > -1; });
-    var rest   = DATA.chains.filter(function (c) { return pins.indexOf(c.id) === -1; });
-
-    function card(c) {
-      var count = c.items.filter(function (it) { return fits(it, goal); }).length;
-      var noData = c.items.filter(function (it) { return unknownFor(it, goal); }).length;
-      var isPin = pins.indexOf(c.id) > -1;
-      return '<div style="display:flex;align-items:stretch;gap:0">' +
-        '<button class="chaincard' + (isPin ? ' pinned' : '') + '" type="button" data-chain="' + esc(c.id) + '">' +
-          '<span class="nm">' + esc(c.name) + '</span>' +
-          '<span class="meta">' + (goal !== 'none'
-            ? (count ? '<span class="fit">' + count + ' fit</span>' : '<span class="nofit">none fit</span>') +
-              (noData ? noData + ' unchecked' : c.items.length + ' items')
-            : c.items.length + ' items') + '</span>' +
-          '<span class="arw">›</span>' +
-        '</button>' +
-        '<button class="pinbtn" type="button" data-pin="' + esc(c.id) + '" aria-pressed="' + isPin +
-        '" aria-label="Pin ' + esc(c.name) + '" style="align-self:center">★</button>' +
-        '</div>';
-    }
-
-    var out = '';
-    if (pinned.length) out += '<div class="sechead">Your regulars</div>' + pinned.map(card).join('');
-    out += '<div class="sechead">' + (pinned.length ? 'Everywhere else' : 'All places') + '</div>' + rest.map(card).join('');
-    out += '<div class="tips"><h2>Rules that always hold</h2>' +
-      (DATA.tips || []).map(function (t) { return '<p>' + esc(t) + '</p>'; }).join('') + '</div>';
-    return out;
-  }
-
-  function searchBar() {
-    return '<div class="searchbar"><input id="q" type="search" placeholder="Search a place or an item" ' +
-      'value="' + esc(query) + '" autocomplete="off" enterkeyhint="search"></div>';
-  }
-
-  function viewChain(id) {
-    var c = chainById(id);
-    if (!c) return '<div class="empty"><b>Not found</b>That place isn\'t on file.</div>';
-
-    var cats = [];
-    c.items.forEach(function (it) { if (it.cat && cats.indexOf(it.cat) === -1) cats.push(it.cat); });
-    if (cat !== 'all' && cats.indexOf(cat) === -1) cat = 'all';
-
-    var inCat = c.items.map(function (_, i) { return i; }).filter(function (i) {
-      return cat === 'all' || c.items[i].cat === cat;
-    });
-    var idxs     = inCat.filter(function (i) { return fits(c.items[i], goal); });
-    var unknowns = inCat.filter(function (i) { return unknownFor(c.items[i], goal); });
-
-    if (goal !== 'none') {
-      idxs.sort(function (a, b) {
-        var A = c.items[a], B = c.items[b];
-        var pa = passes(base(A), goal) ? 0 : 1, pb = passes(base(B), goal) ? 0 : 1;
-        if (pa !== pb) return pa - pb;
-        if (goal === 'protein') return (B.protein_g / B.cal) - (A.protein_g / A.cal);
-        if (goal === 'sodium')  return A.sodium_mg - B.sodium_mg;
-        if (goal === 'carbs')   return A.net_carbs_g - B.net_carbs_g;
-        return A.cal - B.cal;
-      });
-    }
-
-    var catRow = cats.length > 1
-      ? '<div class="chiprow cats"><button class="chip" type="button" data-cat="all" aria-pressed="' +
-        (cat === 'all') + '">All</button>' + cats.map(function (k) {
-          return '<button class="chip" type="button" data-cat="' + esc(k) + '" aria-pressed="' +
-            (cat === k) + '">' + esc(k) + '</button>';
-        }).join('') + '</div>'
-      : '';
-
-    var tips = (c.tips || []).map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('');
-    var addons = (c.addons || []).map(function (a) {
-      var cost = [];
-      if (a.cal) cost.push('+' + n(a.cal) + ' cal');
-      if (a.sodium_mg) cost.push('+' + n(a.sodium_mg) + 'mg');
-      if (a.sugar_g) cost.push('+' + n(a.sugar_g) + 'g sugar');
-      return '<div class="addon"><span>' + esc(a.name) +
-        (a.note ? '<small>' + esc(a.note) + '</small>' : '') +
-        '</span><span class="cost">' + cost.join(' · ') + '</span></div>';
-    }).join('');
-
-    var isPin = pins.indexOf(c.id) > -1;
-
-    return '<div class="backbar"><button type="button" data-back="1">‹ All places</button>' +
-      (c.verified === false ? '<span class="unverified">Seed data</span>' : '') +
-      '<button class="pinbtn" type="button" data-pin="' + esc(c.id) + '" aria-pressed="' + isPin +
-      '" aria-label="Pin" style="margin-left:auto">★</button></div>' +
-      (tips ? '<ul class="chain-tips">' + tips + '</ul>' : '') +
-      goalChips() + catRow +
-      (idxs.length
-        ? idxs.map(function (i) { return renderItem(c, i, false); }).join('')
-        : (unknowns.length
-            ? ''
-            : '<div class="empty"><b>Nothing clears this</b>No item here fits that goal, even with changes. That\'s a real answer.</div>')) +
-      (unknowns.length
-        ? '<div class="nodata"><b>' + unknowns.length + ' item' + (unknowns.length > 1 ? 's' : '') +
-          ' can\'t be checked yet</b>No ' + esc(GOAL_NOUN[goal]) + ' numbers on file for these. They\'re shown, not judged.</div>' +
-          unknowns.map(function (i) { return renderItem(c, i, false); }).join('')
-        : '') +
-      (addons ? '<div class="addons"><h3>Watch the add-ons</h3>' + addons + '</div>' : '');
-  }
-
-  function viewAbout() {
-    return '<div class="backbar"><button type="button" data-back="1">‹ Back</button></div>' +
-      '<h2 style="font-family:var(--display);text-transform:uppercase;letter-spacing:.03em;font-size:30px;margin:6px 0 12px">Read this</h2>' +
-      '<div class="fineprint"><ul>' +
-        '<li><b>Numbers come from what each restaurant publishes.</b> They change without notice.</li>' +
-        '<li><b>Your actual order will vary</b> by location and by whoever makes it.</li>' +
-        '<li><b>No allergen information here.</b> If you have an allergy, ask the restaurant directly.</li>' +
-        '<li><b>This is a reference tool, not advice.</b> Not medical or nutrition guidance. For anything affecting your health, talk to a doctor or dietitian.</li>' +
-      '</ul></div>' +
-      '<p style="font-family:var(--mono);font-size:12px;color:var(--muted)">Menu data ' + esc(DATA.updated || DATA.version) +
-      ' · v' + esc(DATA.version) + '</p>' +
-      '<button class="btn ghost" type="button" data-ob="redo">Redo setup</button>';
-  }
-
-  /* ------------------------------------------------ router */
-  function go(hash) {
-    if (location.hash === hash) render(); else location.hash = hash;
-  }
-
-  function render() {
-    if (!DATA) return;
-    if (localStorage.getItem('so:agreed') !== DISCLAIMER_VERSION) { renderOnboard(); return; }
-
-    var h = location.hash || '#/';
-    var app = document.getElementById('app');
-    var title = 'Smart Order';
-
-    if (h.indexOf('#/c/') === 0) {
-      var c = chainById(h.slice(4));
-      title = c ? c.name : 'Smart Order';
-      app.innerHTML = viewChain(h.slice(4));
-    } else if (h === '#/about') {
-      title = 'About';
-      app.innerHTML = viewAbout();
-    } else {
-      cat = 'all';
-      app.innerHTML = viewHome();
-    }
-
-    document.getElementById('hTitle').textContent = title;
-    document.getElementById('stamp').innerHTML = 'Menu data <b>' + esc(DATA.updated || DATA.version) + '</b>';
-    save();
-  }
-
-  window.addEventListener('hashchange', function () { render(); window.scrollTo(0, 0); });
-
-  /* ------------------------------------------------ events */
-  document.addEventListener('click', function (e) {
-    var t = e.target;
-
-    var ob = t.closest('[data-ob]');
-    if (ob) {
-      var a = ob.dataset.ob;
-      if (a === 'next') { obStep++; renderOnboard(); }
-      if (a === 'done') { finishOnboard(); }
-      if (a === 'redo') { obStep = 0; obPicks = pins.slice(); renderOnboard(); }
-      if (a === 'install' && deferredInstall) {
-        deferredInstall.prompt();
-        deferredInstall.userChoice.finally(function () { deferredInstall = null; });
-      }
-      return;
-    }
-
-    var pk = t.closest('[data-pick]');
-    if (pk) {
-      var id = pk.dataset.pick, at = obPicks.indexOf(id);
-      if (at > -1) obPicks.splice(at, 1); else obPicks.push(id);
-      pk.setAttribute('aria-pressed', at === -1);
-      return;
-    }
-
-    var pin = t.closest('[data-pin]');
-    if (pin) {
-      var pid = pin.dataset.pin, pi = pins.indexOf(pid);
-      if (pi > -1) pins.splice(pi, 1); else pins.push(pid);
-      save(); render();
-      return;
-    }
-
-    var chip = t.closest('[data-goal]');
-    if (chip) { goal = chip.dataset.goal; picks = {}; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
-
-    var cc = t.closest('[data-cat]');
-    if (cc) { cat = cc.dataset.cat; render(); return; }
-
-    var card = t.closest('[data-chain]');
-    if (card) { query = ''; cat = 'all'; go('#/c/' + card.dataset.chain); return; }
-
-    if (t.closest('[data-back]')) { history.length > 1 ? history.back() : go('#/'); return; }
-    if (t.id === 'btnInfo') { go('#/about'); return; }
-  });
-
-  document.addEventListener('input', function (e) {
-    if (e.target.id !== 'q') return;
-    query = e.target.value;
-    // Repaint only the results — never the input, or the keyboard closes mid-word.
-    var box = document.getElementById('results');
-    if (box) box.innerHTML = homeResults();
-  });
-
-  document.addEventListener('change', function (e) {
-    var box = e.target;
-    if (!box.matches('.mod input')) return;
-    var key = box.dataset.key, i = +box.dataset.mod;
-    var sel = picks[key] || [], at = sel.indexOf(i);
-    if (box.checked && at === -1) sel.push(i);
-    if (!box.checked && at > -1) sel.splice(at, 1);
-    picks[key] = sel; save();
-
-    var parts = key.split(':'), chain = chainById(parts[0]);
-    var cardEl = document.querySelector('.item[data-key="' + key + '"]');
-    if (cardEl && chain) {
-      var tmp = document.createElement('div');
-      tmp.innerHTML = renderItem(chain, +parts[1], !!cardEl.querySelector('.item-chain'));
-      cardEl.replaceWith(tmp.firstChild);
-    }
-  });
-
-  window.addEventListener('beforeinstallprompt', function (e) {
-    e.preventDefault(); deferredInstall = e;
-    if (!document.getElementById('onboard').classList.contains('hidden') && obStep === 2) renderOnboard();
-  });
-
-  /* ------------------------------------------------ toast */
-  var toast = document.getElementById('toast');
-  function showToast(msg) {
-    document.getElementById('toastMsg').textContent = msg;
-    document.getElementById('toastBtn').onclick = function () { toast.classList.remove('up'); };
-    toast.classList.add('up');
-    setTimeout(function () { toast.classList.remove('up'); }, 4500);
-  }
-
-  /* ------------------------------------------------ boot + sync */
-  function load(opts) { return fetch('./data.json', opts).then(function (r) { return r.json(); }); }
-
-  load().then(function (d) { DATA = d; render(); checkVersion(); })
-    .catch(function () {
-      document.getElementById('app').innerHTML =
-        '<div class="empty"><b>No menu data</b>Connect once to download the menus. After that it works offline.</div>';
-    });
-
-  function checkVersion() {
-    fetch('./version.json', { cache: 'no-store' })
-      .then(function (r) { return r.json(); })
-      .then(function (v) {
-        if (!v.version || v.version === DATA.version) return;
-        return load({ cache: 'reload' }).then(function (d) {
-          DATA = d; render(); showToast('Menus updated — ' + (d.updated || d.version));
-        });
-      })
-      .catch(function () {});
-  }
-
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function () { navigator.serviceWorker.register('./sw.js').catch(function () {}); });
-  }
+(function(){
+'use strict';
+var DISCLAIMER_VERSION='2';
+var DATA=null;
+var goal=localStorage.getItem('so:goal')||'none';
+var pins=JSON.parse(localStorage.getItem('so:pins')||'[]');
+var picks=JSON.parse(localStorage.getItem('so:picks')||'{}');
+var order=JSON.parse(localStorage.getItem('so:order')||'[]');
+var query='',cat='all',obStep=0,obPicks=pins.slice(),deferredInstall=null;
+var GOALS=[{id:'none',label:'Browse'},{id:'protein',label:'High protein'},{id:'sodium',label:'Lower sodium'},{id:'carbs',label:'Lower carb'},{id:'cal',label:'Under 500'}];
+var FIELDS=['cal','protein_g','net_carbs_g','fat_g','sat_fat_g','sodium_mg','sugar_g'];
+var GOAL_FIELD={protein:'protein_g',sodium:'sodium_mg',carbs:'net_carbs_g',cal:'cal'};
+var GOAL_NOUN={protein:'protein',sodium:'sodium',carbs:'carb',cal:'calorie'};
+function esc(s){return String(s==null?'':s).replace(/[&<>\"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]})}
+function n(x){if(typeof x!=='number')return'—';return Math.round(x*10)/10===Math.round(x)?Math.round(x).toLocaleString():(Math.round(x*10)/10).toLocaleString()}
+function pctClass(v){return v>=95?'good':(v>=60?'warn':'bad')}
+function base(item){var o={};FIELDS.forEach(function(f){o[f]=(item[f]===null||item[f]===undefined)?null:item[f]});return o}
+function apply(vals,mods,idxs){var o={};FIELDS.forEach(function(f){o[f]=vals[f]});(idxs||[]).forEach(function(i){var d=(mods[i]&&mods[i].delta)||{};FIELDS.forEach(function(f){if(typeof d[f]==='number'&&typeof o[f]==='number')o[f]+=d[f]})});FIELDS.forEach(function(f){if(typeof o[f]==='number')o[f]=Math.max(0,Math.round(o[f]*10)/10)});return o}
+function known(v,g){if(g==='none')return true;if(g==='protein')return typeof v.protein_g==='number'&&typeof v.cal==='number';return typeof v[GOAL_FIELD[g]]==='number'}
+function passes(v,g){var t=DATA.thresholds;if(!known(v,g))return false;if(g==='protein'){if(v.cal<=0)return false;return v.protein_g>=t.protein.min_g&&(v.protein_g/v.cal)*100>=t.protein.min_g_per_100cal}if(g==='sodium')return v.sodium_mg<=t.sodium.max_mg;if(g==='carbs')return v.net_carbs_g<=t.carbs.max_net_g;if(g==='cal')return v.cal<=t.calories.max;return true}
+function improves(mod,g){var d=mod.delta||{};if(g==='sodium')return(d.sodium_mg||0)<0;if(g==='carbs')return(d.net_carbs_g||0)<0;if(g==='cal')return(d.cal||0)<0;if(g==='protein'){var dp=d.protein_g||0,dc=d.cal||0;return(dc<0&&dp>=dc*.06)||(dp>0&&dc<=0)}return false}
+function suggest(item,g){if(g==='none')return null;var mods=item.mods||[],out=[],cur=base(item);for(var i=0;i<mods.length;i++){if(passes(cur,g))break;if(!improves(mods[i],g))continue;out.push(i);cur=apply(base(item),mods,out)}return passes(cur,g)?out:null}
+function classification(item,g){var b=base(item);if(g==='none')return'browse';if(!known(b,g))return'unknown';if(passes(b,g))return'best';if(suggest(item,g))return'smarter';return'other'}
+function fits(item,g){var c=classification(item,g);return c==='best'||c==='smarter'||g==='none'}
+function deltaStr(d){var p=[];if(typeof d.cal==='number'&&d.cal)p.push((d.cal>0?'+':'')+n(d.cal)+' cal');if(typeof d.sodium_mg==='number'&&d.sodium_mg)p.push((d.sodium_mg>0?'+':'')+n(d.sodium_mg)+'mg');if(typeof d.net_carbs_g==='number'&&d.net_carbs_g)p.push((d.net_carbs_g>0?'+':'')+n(d.net_carbs_g)+'c');if(typeof d.protein_g==='number'&&d.protein_g)p.push((d.protein_g>0?'+':'')+n(d.protein_g)+'p');return p.slice(0,3).join(' · ')}
+function save(){localStorage.setItem('so:goal',goal);localStorage.setItem('so:pins',JSON.stringify(pins));localStorage.setItem('so:picks',JSON.stringify(picks));localStorage.setItem('so:order',JSON.stringify(order));updateOrderCount()}
+function chainById(id){for(var i=0;i<DATA.chains.length;i++)if(DATA.chains[i].id===id)return DATA.chains[i];return null}
+function statusFor(c){return c.data_status||{state:c.verified?'verified':'recheck',items_analyzed:(c.items||[]).length,field_coverage_pct:{},summary:c.verified?'Checked nutrition data.':'Needs verification.',coverage_note:'Curated Smart Picks.'}}
+function statusLabel(state){return{verified:'Verified nutrition',partial:'Partial verification',limited:'Limited nutrition',recheck:'Needs recheck'}[state]||'Data status'}
+function statusShort(state){return{verified:'Official + current',partial:'Official · partial audit',limited:'Limited fields',recheck:'Needs recheck'}[state]||'Data status'}
+function fieldForGoal(g){return g==='protein'?'protein':g==='sodium'?'sodium':g==='carbs'?'net_carbs':g==='cal'?'calories':null}
+function relevantCoverage(c){var ds=statusFor(c),f=fieldForGoal(goal);return f&&ds.field_coverage_pct?ds.field_coverage_pct[f]:null}
+function ruleText(){var t=DATA.thresholds;if(goal==='protein')return'HIGH PROTEIN = '+t.protein.min_g+'g+ and '+t.protein.min_g_per_100cal+'g protein per 100 cal.';if(goal==='sodium')return'LOWER SODIUM = '+n(t.sodium.max_mg)+'mg or less. Missing sodium is never treated as zero.';if(goal==='carbs')return'LOWER CARB = '+t.carbs.max_net_g+'g net carbs or less.';if(goal==='cal')return'UNDER 500 = '+t.calories.max+' calories or less.';return'Smart Picks are curated orders we analyzed — not a claim that we have every menu item.'}
+function goalChips(){return'<div class="goalwrap"><div class="chiprow">'+GOALS.map(function(g){return'<button class="chip" type="button" data-goal="'+g.id+'" aria-pressed="'+(goal===g.id)+'">'+esc(g.label)+'</button>'}).join('')+'</div><div class="rule-note">'+esc(ruleText())+'</div></div>'}
+function searchBar(){return'<div class="searchbar"><input id="q" type="search" placeholder="Search a restaurant or Smart Pick" value="'+esc(query)+'" autocomplete="off" enterkeyhint="search"></div>'}
+function coverageLine(label,pct){var v=typeof pct==='number'?pct:0;return'<div class="coverage-line"><span>'+esc(label)+'</span><span class="'+pctClass(v)+'">'+v+'%</span></div>'}
+function renderDataCard(c){var ds=statusFor(c),p=ds.field_coverage_pct||{},src=ds.source_note||'No source note on file.';return'<section class="data-card"><div class="data-top"><div><div class="data-title">Data receipt</div><p class="data-summary">'+esc(ds.summary||'')+'</p></div><span class="statuspill '+esc(ds.state)+'"><span class="dot '+esc(ds.state)+'"></span>'+esc(statusLabel(ds.state))+'</span></div><div class="coverage-grid">'+coverageLine('Calories',p.calories)+coverageLine('Protein',p.protein)+coverageLine('Net carbs',p.net_carbs)+coverageLine('Sodium',p.sodium)+'</div><details><summary>Why does this have this status?</summary><p class="data-detail"><b>Coverage:</b> '+esc(ds.coverage_note||'Curated Smart Picks.')+'<br><b>Source:</b> '+esc(src)+'<br><b>Last checked:</b> '+esc(ds.last_checked||ds.nutrition_date||'Not recorded')+'.</p></details></section>'}
+function statsLine(v,g){function cell(label,val,target,ok){var miss=val.indexOf('—')>-1;return'<div class="line"><span class="k">'+label+'</span><span class="v'+(miss?' none':target?(ok?' hit':' miss'):'')+'">'+val+'</span></div>'}var t=DATA.thresholds;return cell('Calories',n(v.cal),g==='cal',typeof v.cal==='number'&&v.cal<=t.calories.max)+cell('Protein',n(v.protein_g)+' g',g==='protein',passes(v,'protein'))+cell('Net carbs',n(v.net_carbs_g)+' g',g==='carbs',typeof v.net_carbs_g==='number'&&v.net_carbs_g<=t.carbs.max_net_g)+cell('Sodium',n(v.sodium_mg)+' mg',g==='sodium',typeof v.sodium_mg==='number'&&v.sodium_mg<=t.sodium.max_mg)+cell('Sugar',n(v.sugar_g)+' g',false,false)+cell('Sat fat',n(v.sat_fat_g)+' g',false,false)}
+function orderKey(chain,idx){return chain.id+':'+idx}
+function orderHas(key){return order.some(function(x){return x.key===key})}
+function renderItem(chain,idx,showChain){var item=chain.items[idx],key=orderKey(chain,idx),mods=item.mods||[],b=base(item),cls=classification(item,goal);if(!picks[key]&&goal!=='none'&&cls==='smarter'){var sug=suggest(item,goal);if(sug)picks[key]=sug}var sel=picks[key]||[],v=apply(b,mods,sel),badgeLabel=cls==='best'?'Best bet':cls==='smarter'?'Make it smarter':cls==='unknown'?'Can’t verify':cls==='other'?'Doesn’t match':'Smart Pick';var modHtml=mods.length?'<hr class="tear"><p class="mods-title">Make it smarter</p>'+mods.map(function(m,i){return'<label class="mod"><input type="checkbox" data-key="'+key+'" data-mod="'+i+'"'+(sel.indexOf(i)>-1?' checked':'')+'><span class="lbl">'+esc(m.label)+'</span><span class="dlt">'+esc(deltaStr(m.delta||{}))+'</span></label>'}).join(''):'';var changed=sel.length?'<div class="order-total"><div class="headline">Your version</div><div class="line"><span class="k">Calories</span><span class="v">'+n(v.cal)+'</span></div><div class="line"><span class="k">Protein</span><span class="v">'+n(v.protein_g)+' g</span></div><div class="line"><span class="k">Sodium</span><span class="v">'+n(v.sodium_mg)+' mg</span></div></div>':'';return'<article class="item '+(cls==='browse'?'other':cls)+'" data-key="'+key+'"><div class="item-head"><div>'+(showChain?'<p class="item-chain">'+esc(chain.name)+'</p>':'')+'<h3 class="item-name">'+esc(item.name)+'</h3>'+(item.note?'<p class="item-note">'+esc(item.note)+'</p>':'')+'</div><span class="badge '+(cls==='browse'?'other':cls)+'">'+esc(badgeLabel)+'</span></div><div class="ticket">'+statsLine(v,goal)+modHtml+changed+'</div><div class="item-actions"><button class="smallbtn" type="button" data-add-order="'+key+'">'+(orderHas(key)?'Update my order':'Add to my order')+'</button></div></article>'}
+function homeIntro(){return'<section class="receipt homeintro"><div class="receipt-kicker">Smart Order · Order Advisor</div><div class="receipt-title">Know what you’re ordering.</div><p class="receipt-copy">Choose a goal. We’ll surface the Smart Picks we can actually support with nutrition data, show the changes that help, and tell you when the data isn’t strong enough to call it.</p><hr class="receipt-rule"><div class="receipt-row"><span class="label">Restaurants</span><strong>'+DATA.chains.length+'</strong></div><div class="receipt-row"><span class="label">Smart Picks analyzed</span><strong>'+DATA.chains.reduce(function(a,c){return a+c.items.length},0)+'</strong></div><div class="receipt-row"><span class="label">Coverage promise</span><strong>Curated, not complete menus</strong></div></section>'}
+function chainCard(c){var ds=statusFor(c),match=c.items.filter(function(it){return fits(it,goal)}).length,unknown=c.items.filter(function(it){return classification(it,goal)==='unknown'}).length,isPin=pins.indexOf(c.id)>-1,cov=relevantCoverage(c);var meta=goal==='none'?ds.items_analyzed+' Smart Picks':(match?'<span class="chainfit">'+match+' match'+(match===1?'':'es')+'</span>':'0 matches')+(cov!==null?' · '+cov+'% '+esc(GOAL_NOUN[goal]||'goal')+' data':'');var extra=goal!=='none'&&unknown?unknown+' can’t be checked · ':'';return'<div class="chainwrap"><button class="chaincard'+(isPin?' pinned':'')+'" type="button" data-chain="'+esc(c.id)+'"><span class="chainname">'+esc(c.name)+'</span><span class="chainmeta">'+meta+'</span><span class="chainstatus"><span class="dot '+esc(ds.state)+'"></span>'+extra+esc(statusShort(ds.state))+' · '+ds.items_analyzed+' analyzed</span></button><button class="pinbtn" type="button" data-pin="'+esc(c.id)+'" aria-pressed="'+isPin+'" aria-label="Pin '+esc(c.name)+'">★</button></div>'}
+function searchResults(q){var hits=[];DATA.chains.forEach(function(c){c.items.forEach(function(it,i){var hay=(it.name+' '+(it.note||'')+' '+c.name).toLowerCase();if(hay.indexOf(q)>-1){var cls=classification(it,goal);if(goal==='none'||cls==='best'||cls==='smarter'||cls==='unknown')hits.push({c:c,i:i,cls:cls})}})});if(!hits.length)return'<div class="empty"><b>No Smart Pick found</b>We only search the restaurant entries Smart Order has analyzed. Try the restaurant name, a simpler item name, or browse the restaurant’s Smart Picks.</div>';hits.sort(function(a,b){var rank={best:0,smarter:1,unknown:2,browse:3,other:4};return(rank[a.cls]===undefined?3:rank[a.cls])-(rank[b.cls]===undefined?3:rank[b.cls])});return'<div class="sechead">Search results <small>'+hits.length+' analyzed picks</small></div>'+hits.map(function(h){return renderItem(h.c,h.i,true)}).join('')}
+function homeResults(){var q=query.trim().toLowerCase();if(q)return searchResults(q);var pinned=DATA.chains.filter(function(c){return pins.indexOf(c.id)>-1}),rest=DATA.chains.filter(function(c){return pins.indexOf(c.id)===-1}),out=homeIntro();if(pinned.length)out+='<div class="sechead">Your regulars <small>pinned</small></div>'+pinned.map(chainCard).join('');out+='<div class="sechead">'+(pinned.length?'Everywhere else':'Restaurants')+' <small>'+DATA.chains.length+' total</small></div>'+rest.map(chainCard).join('');out+='<div class="tips"><h2>Smart Order rules</h2>'+(DATA.tips||[]).map(function(t){return'<p>'+esc(t)+'</p>'}).join('')+'</div>';return out}
+function viewHome(){return searchBar()+goalChips()+'<div id="results">'+homeResults()+'</div>'}
+function groupHead(type,count){var labels={best:['Best bets','Fit your goal as listed.'],smarter:['Make it smarter','These clear your goal with a realistic order change.'],unknown:['Can’t verify yet','The nutrition field needed for this goal is missing or incomplete.'],other:['Other Smart Picks','Analyzed for context, but they do not clear this goal.']},x=labels[type];return'<div class="grouphead '+type+'"><div class="label">'+x[0]+' · '+count+'</div><div class="explain">'+x[1]+'</div></div>'}
+function sortIdxs(c,arr){if(goal==='none')return arr;return arr.sort(function(a,b){var A=c.items[a],B=c.items[b],ca=classification(A,goal),cb=classification(B,goal),rank={best:0,smarter:1,unknown:2,other:3};if(rank[ca]!==rank[cb])return rank[ca]-rank[cb];if(goal==='protein'&&A.cal&&B.cal)return(B.protein_g/B.cal)-(A.protein_g/A.cal);if(goal==='sodium'&&typeof A.sodium_mg==='number'&&typeof B.sodium_mg==='number')return A.sodium_mg-B.sodium_mg;if(goal==='carbs'&&typeof A.net_carbs_g==='number'&&typeof B.net_carbs_g==='number')return A.net_carbs_g-B.net_carbs_g;if(goal==='cal')return(A.cal||9999)-(B.cal||9999);return 0})}
+function viewChain(id){var c=chainById(id);if(!c)return'<div class="empty"><b>Not found</b>This restaurant is not in the current Smart Order dataset.</div>';var ds=statusFor(c),cats=[];c.items.forEach(function(it){if(it.cat&&cats.indexOf(it.cat)===-1)cats.push(it.cat)});if(cat!=='all'&&cats.indexOf(cat)===-1)cat='all';var inCat=c.items.map(function(_,i){return i}).filter(function(i){return cat==='all'||c.items[i].cat===cat});sortIdxs(c,inCat);var groups={best:[],smarter:[],unknown:[],other:[]};inCat.forEach(function(i){var cls=classification(c.items[i],goal);if(goal==='none')groups.other.push(i);else groups[cls].push(i)});var catRow=cats.length>1?'<div class="chiprow cats"><button class="chip" data-cat="all" aria-pressed="'+(cat==='all')+'">All</button>'+cats.map(function(k){return'<button class="chip" data-cat="'+esc(k)+'" aria-pressed="'+(cat===k)+'">'+esc(k)+'</button>'}).join('')+'</div>':'';var tips=(c.tips||[]).map(function(t){return'<li>'+esc(t)+'</li>'}).join('');var isPin=pins.indexOf(c.id)>-1;var body='';if(goal==='none'){body='<div class="grouphead"><div class="label">All Smart Picks · '+groups.other.length+'</div><div class="explain">Curated orders Smart Order has analyzed for this restaurant.</div></div>'+groups.other.map(function(i){return renderItem(c,i,false)}).join('')}else{['best','smarter','unknown','other'].forEach(function(type){if(groups[type].length)body+=groupHead(type,groups[type].length)+groups[type].map(function(i){return renderItem(c,i,false)}).join('')});if(!groups.best.length&&!groups.smarter.length){var cov=relevantCoverage(c),msg=groups.unknown.length?'We can’t confidently find a verified match for this goal yet because some of the required nutrition data is missing.':'None of the '+inCat.length+' Smart Picks we analyzed clear this goal'+(ds.coverage==='curated'?'. That does not mean nothing on the restaurant’s full menu can work.':'.');body='<div class="empty"><b>No verified match yet</b>'+esc(msg)+(cov!==null?'<br><br><strong>'+cov+'%</strong> of these Smart Picks have the '+esc(GOAL_NOUN[goal])+' data needed for this filter.':'')+'</div>'+body}}var addons=(c.addons||[]).map(function(a){var cost=[];if(a.cal)cost.push('+'+n(a.cal)+' cal');if(a.sodium_mg)cost.push('+'+n(a.sodium_mg)+'mg');if(a.sugar_g)cost.push('+'+n(a.sugar_g)+'g sugar');return'<div class="addon"><span>'+esc(a.name)+(a.note?'<small>'+esc(a.note)+'</small>':'')+'</span><span class="cost">'+cost.join(' · ')+'</span></div>'}).join('');return'<div class="backbar"><button type="button" data-back="1">‹ Restaurants</button><span class="statuspill '+esc(ds.state)+'"><span class="dot '+esc(ds.state)+'"></span>'+esc(statusLabel(ds.state))+'</span><button class="pinbtn" type="button" data-pin="'+esc(c.id)+'" aria-pressed="'+isPin+'">★</button></div><section class="receipt"><div class="receipt-kicker">Smart Order · Restaurant ticket</div><div class="receipt-title">'+esc(c.name)+'</div><div class="receipt-row"><span class="label">Smart Picks analyzed</span><strong>'+ds.items_analyzed+'</strong></div><div class="receipt-row"><span class="label">Menu coverage</span><strong>Curated picks</strong></div><div class="receipt-row"><span class="label">Order goal</span><strong>'+esc(GOALS.filter(function(g){return g.id===goal})[0].label)+'</strong></div></section>'+renderDataCard(c)+(tips?'<ul class="chain-tips">'+tips+'</ul>':'')+goalChips()+catRow+body+(addons?'<div class="addons"><h3>Watch the add-ons</h3>'+addons+'</div>':'')}
+function addOrder(key){var parts=key.split(':'),c=chainById(parts[0]),idx=+parts[1];if(!c||!c.items[idx])return;var item=c.items[idx],sel=(picks[key]||[]).slice(),v=apply(base(item),item.mods||[],sel),mods=sel.map(function(i){return(item.mods[i]||{}).label}).filter(Boolean),entry={key:key,chain_id:c.id,chain_name:c.name,item_idx:idx,item_name:item.name,mods:mods,selected_mods:sel,totals:v,added_at:new Date().toISOString()};var at=-1;order.forEach(function(x,i){if(x.key===key)at=i});if(at>-1)order[at]=entry;else order.push(entry);save();showToast((at>-1?'Updated ':'Added ')+item.name+' in My Order');renderCurrentItem(key)}
+function renderCurrentItem(key){var parts=key.split(':'),c=chainById(parts[0]),el=document.querySelector('.item[data-key="'+key+'"]');if(!c||!el)return;var tmp=document.createElement('div');tmp.innerHTML=renderItem(c,+parts[1],!!el.querySelector('.item-chain'));el.replaceWith(tmp.firstChild)}
+function totalOrder(){var totals={cal:0,protein_g:0,net_carbs_g:0,sodium_mg:0,fat_g:0,sugar_g:0},knowns={};Object.keys(totals).forEach(function(f){knowns[f]=true});order.forEach(function(x){Object.keys(totals).forEach(function(f){if(typeof x.totals[f]==='number'&&knowns[f])totals[f]+=x.totals[f];else knowns[f]=false})});Object.keys(totals).forEach(function(f){if(!knowns[f])totals[f]=null});return totals}
+function viewOrder(){if(!order.length)return'<div class="backbar"><button data-back="1">‹ Back</button></div><section class="receipt"><div class="receipt-kicker">Smart Order · My Order</div><div class="receipt-title">Your receipt is empty.</div><p class="receipt-copy">Add Smart Picks from any restaurant and we’ll total the nutrition we can verify for the whole order.</p></section><div class="empty"><b>Build an order</b>Open a restaurant, adjust an item if you want, then tap <strong>Add to my order</strong>.</div>';var t=totalOrder(),lines=order.map(function(x,i){return'<div class="order-line"><div class="order-line-top"><div><div class="order-line-chain">'+esc(x.chain_name)+'</div><div class="order-line-name">'+esc(x.item_name)+'</div></div><button class="removebtn" type="button" data-remove-order="'+i+'">Remove</button></div>'+(x.mods.length?'<div class="order-line-meta">'+x.mods.map(esc).join(' · ')+'</div>':'')+'<div class="order-line-meta">'+n(x.totals.cal)+' cal · '+n(x.totals.protein_g)+'g protein · '+n(x.totals.sodium_mg)+'mg sodium</div></div>'}).join('');var goalOk=goal!=='none'&&passes(t,goal);return'<div class="backbar"><button data-back="1">‹ Back</button></div><section class="receipt"><div class="receipt-kicker">Smart Order · My Order</div><div class="receipt-title">Order #'+String(order.length).padStart(2,'0')+'</div>'+lines+'<div class="totalbox"><div class="grand"><span>Total</span><span>'+n(t.cal)+' cal</span></div><div class="receipt-row"><span class="label">Protein</span><strong>'+n(t.protein_g)+' g</strong></div><div class="receipt-row"><span class="label">Net carbs</span><strong>'+n(t.net_carbs_g)+' g</strong></div><div class="receipt-row"><span class="label">Sodium</span><strong>'+n(t.sodium_mg)+' mg</strong></div></div>'+(goal!=='none'?'<div class="smartnote">'+(known(t,goal)?(goalOk?'✓ This combined order clears your current <b>'+esc(GOALS.filter(function(g){return g.id===goal})[0].label)+'</b> rule.':'This combined order does not clear your current <b>'+esc(GOALS.filter(function(g){return g.id===goal})[0].label)+'</b> rule.'):'We can’t judge this combined order against your current goal because at least one item is missing required nutrition data.')+'</div>':'')+'<div class="footer-actions"><button class="smallbtn ghost" data-clear-order="1">Clear order</button></div></section>'}
+function viewAbout(){var verified=DATA.chains.filter(function(c){return statusFor(c).state==='verified'}).length;return'<div class="backbar"><button data-back="1">‹ Back</button></div><section class="receipt"><div class="receipt-kicker">Smart Order · Data policy</div><div class="receipt-title">Useful beats pretending.</div><p class="receipt-copy">Smart Order is an order advisor, not a full restaurant menu database. We curate useful choices, show the nutrition fields we have, and make missing data visible instead of silently filling gaps.</p><hr class="receipt-rule"><div class="receipt-row"><span class="label">Restaurants</span><strong>'+DATA.chains.length+'</strong></div><div class="receipt-row"><span class="label">Fully current-verified sets</span><strong>'+verified+'</strong></div><div class="receipt-row"><span class="label">Dataset</span><strong>'+esc(DATA.updated||DATA.version)+'</strong></div></section><div class="data-card"><div class="data-title">What the badges mean</div><p class="data-summary"><b>Verified nutrition</b> means every Smart Pick listed for that restaurant was checked against a current official source and the required macro fields are complete.</p><p class="data-summary"><b>Partial verification</b> means official data was used, but the set is not fully audited or some fields are incomplete.</p><p class="data-summary"><b>Limited nutrition</b> means only some fields are trustworthy enough to use. Smart Order will not judge missing fields.</p><p class="data-summary"><b>Needs recheck</b> means the source is older, unverified, or should be refreshed before strong claims are made.</p></div><div class="tips"><h2>Important</h2><p>Restaurant nutrition changes. Portions vary by location and preparation.</p><p>Unknown values are stored as null and are never treated as zero.</p><p>This app does not provide allergen guidance or medical/nutrition advice.</p></div><button class="btn ghost" type="button" data-ob="redo">Redo setup</button>'}
+function viewOnboard(){var html='';if(obStep===0)html='<div class="ob-receipt"><div class="ob-count">Setup · 1 of 3</div><h2>Know before you order.</h2><p>Smart Order analyzes useful restaurant choices and shows you which ones fit your goal — or can fit with a smarter order.</p><ul class="ob-list"><li>Curated Smart Picks, not fake “full menu” coverage</li><li>Live nutrition totals when you change an order</li><li>Clear warnings when a restaurant’s data is incomplete</li><li>A My Order receipt for your whole meal</li></ul><button class="btn" data-ob="next">Next</button></div>';if(obStep===1)html='<div class="ob-receipt"><div class="ob-count">Setup · 2 of 3</div><h2>The honest part.</h2><p class="sub">Nutrition data is useful only when you know what it can and cannot support.</p><ul class="ob-list"><li>Restaurant nutrition changes, and actual portions vary.</li><li>“Verified” applies to the Smart Picks listed — not every item the restaurant sells.</li><li>Missing nutrition stays missing. We never convert “unknown” into zero.</li><li>No allergen guidance here. For allergies, use the restaurant’s current information directly.</li></ul><button class="btn" data-ob="next">Got it</button></div>';if(obStep===2){var cards=DATA.chains.map(function(c){return'<button class="pick" type="button" data-pick="'+esc(c.id)+'" aria-pressed="'+(obPicks.indexOf(c.id)>-1)+'">'+esc(c.name)+'</button>'}).join('');html='<div class="ob-receipt"><div class="ob-count">Setup · 3 of 3</div><h2>Your regulars.</h2><p class="sub">Pin the restaurants you use most. You can change this any time.</p><div class="pickgrid">'+cards+'</div><button class="btn" data-ob="done">Start ordering smarter</button>'+(deferredInstall?'<button class="btn ghost" data-ob="install">Add to home screen</button>':'')+'</div>'}document.getElementById('obInner').innerHTML=html}
+function renderOnboard(){document.getElementById('onboard').classList.remove('hidden');document.getElementById('shell').classList.add('hidden');viewOnboard();window.scrollTo(0,0)}
+function finishOnboard(){pins=obPicks.slice();localStorage.setItem('so:agreed',DISCLAIMER_VERSION);save();document.getElementById('onboard').classList.add('hidden');document.getElementById('shell').classList.remove('hidden');go('#/')}
+function go(hash){if(location.hash===hash)render();else location.hash=hash}
+function updateOrderCount(){var el=document.getElementById('orderCount');if(el)el.textContent=order.length}
+function render(){if(!DATA)return;if(localStorage.getItem('so:agreed')!==DISCLAIMER_VERSION){renderOnboard();return}document.getElementById('onboard').classList.add('hidden');document.getElementById('shell').classList.remove('hidden');var h=location.hash||'#/',app=document.getElementById('app'),title='Smart Order';if(h.indexOf('#/c/')===0){var c=chainById(h.slice(4));title=c?c.name:'Smart Order';app.innerHTML=viewChain(h.slice(4))}else if(h==='#/order'){title='My Order';app.innerHTML=viewOrder()}else if(h==='#/about'){title='About';app.innerHTML=viewAbout()}else{cat='all';app.innerHTML=viewHome()}document.getElementById('hTitle').textContent=title;document.getElementById('stamp').textContent='Nutrition data · '+(DATA.updated||DATA.version);save()}
+window.addEventListener('hashchange',function(){render();window.scrollTo(0,0)});
+document.addEventListener('click',function(e){var t=e.target,ob=t.closest('[data-ob]');if(ob){var a=ob.dataset.ob;if(a==='next'){obStep++;viewOnboard()}if(a==='done')finishOnboard();if(a==='redo'){obStep=0;obPicks=pins.slice();renderOnboard()}if(a==='install'&&deferredInstall){deferredInstall.prompt();deferredInstall.userChoice.finally(function(){deferredInstall=null})}return}var pk=t.closest('[data-pick]');if(pk){var id=pk.dataset.pick,at=obPicks.indexOf(id);if(at>-1)obPicks.splice(at,1);else obPicks.push(id);pk.setAttribute('aria-pressed',at===-1);return}var pin=t.closest('[data-pin]');if(pin){var pid=pin.dataset.pin,pi=pins.indexOf(pid);if(pi>-1)pins.splice(pi,1);else pins.push(pid);save();render();return}var g=t.closest('[data-goal]');if(g){goal=g.dataset.goal;picks={};save();render();return}var cc=t.closest('[data-cat]');if(cc){cat=cc.dataset.cat;render();return}var card=t.closest('[data-chain]');if(card){query='';cat='all';go('#/c/'+card.dataset.chain);return}var add=t.closest('[data-add-order]');if(add){addOrder(add.dataset.addOrder);return}var rem=t.closest('[data-remove-order]');if(rem){order.splice(+rem.dataset.removeOrder,1);save();render();showToast('Removed from My Order');return}if(t.closest('[data-clear-order]')){order=[];save();render();showToast('My Order cleared');return}if(t.closest('[data-back]')){history.length>1?history.back():go('#/');return}if(t.closest('#btnOrder')){go('#/order');return}if(t.closest('#btnInfo')){go('#/about');return}});
+document.addEventListener('input',function(e){if(e.target.id!=='q')return;query=e.target.value;var box=document.getElementById('results');if(box)box.innerHTML=homeResults()});
+document.addEventListener('change',function(e){var box=e.target;if(!box.matches('.mod input'))return;var key=box.dataset.key,i=+box.dataset.mod,sel=picks[key]||[],at=sel.indexOf(i);if(box.checked&&at===-1)sel.push(i);if(!box.checked&&at>-1)sel.splice(at,1);picks[key]=sel;save();renderCurrentItem(key)});
+window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();deferredInstall=e;if(!document.getElementById('onboard').classList.contains('hidden')&&obStep===2)viewOnboard()});
+var toast=document.getElementById('toast');function showToast(msg){document.getElementById('toastMsg').textContent=msg;document.getElementById('toastBtn').onclick=function(){toast.classList.remove('up')};toast.classList.add('up');setTimeout(function(){toast.classList.remove('up')},3200)}
+function load(opts){return fetch('./data.json',opts).then(function(r){if(!r.ok)throw new Error('data');return r.json()})}
+load().then(function(d){DATA=d;render();checkVersion()}).catch(function(){document.getElementById('app').innerHTML='<div class="empty"><b>No nutrition data</b>Connect once so Smart Order can download its current dataset. After that it works offline.</div>'});
+function checkVersion(){fetch('./version.json',{cache:'no-store'}).then(function(r){return r.json()}).then(function(v){if(!v.version||v.version===DATA.version)return;return load({cache:'reload'}).then(function(d){DATA=d;render();showToast('Nutrition data updated · '+(d.updated||d.version))})}).catch(function(){})}
+if('serviceWorker'in navigator)window.addEventListener('load',function(){navigator.serviceWorker.register('./sw.js').catch(function(){})});
 })();
 </script>
 </body>

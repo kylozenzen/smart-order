@@ -1,4 +1,4 @@
-const CACHE = 'smart-order-v2';
+const CACHE = 'smart-order-v3-receipt';
 
 const SHELL = [
   './',
