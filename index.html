@@ -21,6 +21,7 @@
     --pass:     #1D6B47;
     --caution:  #B3690F;
     --fail:     #A93B32;
+    --flag:     #E0A93B;
 
     --display: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
     --body:    'Barlow', system-ui, -apple-system, sans-serif;
@@ -30,237 +31,302 @@
   * { box-sizing: border-box; }
 
   html, body {
-    margin: 0;
-    background: var(--paper);
-    color: var(--ink);
-    font-family: var(--body);
-    font-size: 16px;
-    line-height: 1.45;
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: var(--body); font-size: 16px; line-height: 1.45;
     -webkit-text-size-adjust: 100%;
   }
 
-  .wrap { max-width: 560px; margin: 0 auto; padding: 0 14px 72px; }
+  .wrap { max-width: 560px; margin: 0 auto; padding: 0 14px 80px; }
 
-  /* ---------- header ---------- */
+  button { font: inherit; cursor: pointer; }
+  .hidden { display: none !important; }
+
+  /* ============================ ONBOARDING ============================ */
+  #onboard {
+    position: fixed; inset: 0; z-index: 60; background: var(--paper);
+    display: flex; flex-direction: column; overflow-y: auto;
+  }
+  .ob-inner {
+    max-width: 560px; width: 100%; margin: 0 auto; flex: 1;
+    display: flex; flex-direction: column;
+    padding: calc(24px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom));
+  }
+  .ob-step { flex: 1; display: flex; flex-direction: column; }
+
+  .ob-count {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 18px;
+  }
+  .ob-inner h2 {
+    font-family: var(--display); font-weight: 700; font-size: 38px; line-height: 1.02;
+    letter-spacing: .01em; text-transform: uppercase; margin: 0 0 14px;
+  }
+  .ob-inner p { font-size: 16px; margin: 0 0 14px; color: var(--ink); }
+  .ob-inner p.sub { color: var(--muted); font-size: 15px; }
+
+  .ob-list { list-style: none; margin: 6px 0 18px; padding: 0; }
+  .ob-list li {
+    font-size: 15px; padding: 9px 0 9px 26px; position: relative;
+    border-bottom: 1px solid var(--rule);
+  }
+  .ob-list li::before {
+    content: "→"; position: absolute; left: 0; top: 9px;
+    font-family: var(--mono); color: var(--pass); font-size: 13px;
+  }
+
+  .fineprint {
+    background: var(--panel); border: 1px solid var(--rule);
+    border-left: 3px solid var(--flag); padding: 14px; margin-bottom: 16px;
+  }
+  .fineprint li {
+    list-style: none; font-size: 14px; padding: 7px 0;
+    border-bottom: 1px dashed var(--rule); color: var(--ink);
+  }
+  .fineprint ul { margin: 0; padding: 0; }
+  .fineprint li:last-child { border-bottom: 0; }
+  .fineprint b { font-weight: 600; }
+
+  .pickgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+  .pick {
+    display: flex; align-items: center; gap: 8px; padding: 13px 12px;
+    background: var(--panel); border: 1.5px solid var(--rule); text-align: left;
+    font-family: var(--display); font-weight: 600; font-size: 17px;
+    letter-spacing: .03em; text-transform: uppercase; min-height: 52px;
+  }
+  .pick[aria-pressed="true"] { border-color: var(--ink); background: var(--ink); color: var(--paper); }
+  .pick .tick { font-family: var(--mono); font-size: 13px; opacity: 0; }
+  .pick[aria-pressed="true"] .tick { opacity: 1; }
+
+  .ob-actions { margin-top: auto; padding-top: 12px; }
+  .btn {
+    display: block; width: 100%; background: var(--ink); color: var(--paper);
+    border: 0; padding: 16px; font-family: var(--display); font-weight: 700;
+    font-size: 19px; letter-spacing: .07em; text-transform: uppercase; min-height: 54px;
+  }
+  .btn.ghost { background: transparent; color: var(--muted); border: 1.5px solid var(--rule); margin-top: 8px; font-size: 15px; padding: 11px; min-height: 44px; }
+  .btn:focus-visible, .pick:focus-visible, .chip:focus-visible,
+  .chaincard:focus-visible, .iconbtn:focus-visible { outline: 3px solid var(--caution); outline-offset: 2px; }
+
+  /* ============================ HEADER ============================ */
   header {
-    position: sticky; top: 0; z-index: 20;
-    background: var(--ink); color: var(--paper);
-    margin: 0 -14px 0;
-    padding: calc(12px + env(safe-area-inset-top)) 14px 12px;
+    position: sticky; top: 0; z-index: 20; background: var(--ink); color: var(--paper);
+    margin: 0 -14px; padding: calc(11px + env(safe-area-inset-top)) 14px 11px;
   }
-  .brand {
-    display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand h1 {
+    font-family: var(--display); font-weight: 700; font-size: 27px;
+    letter-spacing: .04em; text-transform: uppercase; margin: 0; line-height: 1; flex: 1;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  h1 {
-    font-family: var(--display); font-weight: 700;
-    font-size: 30px; letter-spacing: .04em; text-transform: uppercase;
-    margin: 0; line-height: 1;
+  .iconbtn {
+    background: transparent; border: 1.5px solid #3A4147; color: var(--paper);
+    font-family: var(--mono); font-size: 11px; letter-spacing: .06em;
+    text-transform: uppercase; padding: 8px 9px; min-height: 36px; flex: 0 0 auto;
   }
   .stamp {
-    font-family: var(--mono); font-size: 10px; letter-spacing: .06em;
-    text-transform: uppercase; color: #9BA49A; text-align: right; white-space: nowrap;
+    font-family: var(--mono); font-size: 10px; letter-spacing: .05em;
+    text-transform: uppercase; color: #9BA49A; margin-top: 6px;
   }
   .stamp b { color: var(--paper); font-weight: 500; }
 
-  /* ---------- goal chips ---------- */
-  .goals {
-    display: flex; gap: 7px; overflow-x: auto; margin: 0 -14px;
-    padding: 12px 14px; scrollbar-width: none;
-    background: var(--paper);
-    position: sticky; top: 0; z-index: 15;
-    border-bottom: 1px solid var(--rule);
+  /* ============================ SEARCH ============================ */
+  .searchbar { margin: 12px 0 4px; position: relative; }
+  .searchbar input {
+    width: 100%; font-family: var(--body); font-size: 16px; padding: 13px 14px;
+    border: 1.5px solid var(--rule); background: var(--panel); color: var(--ink);
+    border-radius: 0; -webkit-appearance: none; min-height: 48px;
   }
-  .goals::-webkit-scrollbar { display: none; }
+  .searchbar input:focus { outline: 0; border-color: var(--ink); }
+  .searchbar input::placeholder { color: var(--muted); }
+
+  /* ============================ CHIPS ============================ */
+  .chiprow {
+    display: flex; gap: 7px; overflow-x: auto; margin: 0 -14px; padding: 11px 14px;
+    scrollbar-width: none;
+  }
+  .chiprow::-webkit-scrollbar { display: none; }
   .chip {
-    flex: 0 0 auto; font-family: var(--display); font-weight: 600;
-    font-size: 15px; letter-spacing: .05em; text-transform: uppercase;
-    padding: 9px 14px; border: 1.5px solid var(--ink); border-radius: 2px;
-    background: transparent; color: var(--ink); cursor: pointer;
-    min-height: 40px;
+    flex: 0 0 auto; font-family: var(--display); font-weight: 600; font-size: 15px;
+    letter-spacing: .05em; text-transform: uppercase; padding: 8px 13px;
+    border: 1.5px solid var(--ink); background: transparent; color: var(--ink); min-height: 38px;
   }
   .chip[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
-  .chip:focus-visible { outline: 3px solid var(--caution); outline-offset: 2px; }
+  .chiprow.cats .chip { border-color: var(--rule); color: var(--muted); font-size: 14px; }
+  .chiprow.cats .chip[aria-pressed="true"] { border-color: var(--ink); background: transparent; color: var(--ink); }
 
-  .rule-note {
+  .goalwrap { position: sticky; top: 0; z-index: 15; background: var(--paper); border-bottom: 1px solid var(--rule); }
+  .rule-note { font-family: var(--mono); font-size: 11px; color: var(--muted); padding: 9px 0 0; }
+
+  /* ============================ HOME ============================ */
+  .sechead {
+    font-family: var(--display); font-weight: 700; font-size: 15px;
+    letter-spacing: .12em; text-transform: uppercase; color: var(--muted);
+    margin: 24px 0 8px; display: flex; justify-content: space-between; align-items: center;
+  }
+  .sechead button {
+    background: 0; border: 0; font-family: var(--mono); font-size: 11px;
+    letter-spacing: .06em; text-transform: uppercase; color: var(--ink);
+    text-decoration: underline; padding: 4px;
+  }
+
+  .chaincard {
+    display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
+    background: var(--panel); border: 1px solid var(--rule); border-left: 3px solid var(--ink);
+    padding: 14px 12px; margin-bottom: 8px; min-height: 62px; color: var(--ink);
+  }
+  .chaincard .nm {
+    font-family: var(--display); font-weight: 700; font-size: 21px;
+    letter-spacing: .04em; text-transform: uppercase; flex: 1; line-height: 1.1;
+  }
+  .chaincard .meta {
     font-family: var(--mono); font-size: 11px; color: var(--muted);
-    padding: 10px 0 2px; letter-spacing: .01em;
+    text-align: right; white-space: nowrap;
   }
+  .chaincard .meta .fit { color: var(--pass); font-weight: 700; display: block; }
+  .chaincard .arw { font-family: var(--mono); color: var(--muted); font-size: 15px; }
+  .chaincard.pinned { border-left-color: var(--flag); }
 
-  /* ---------- chain ---------- */
-  .chain { margin-top: 26px; }
-  .board {
-    background: var(--ink); color: var(--paper);
-    padding: 8px 12px; display: flex; align-items: center;
-    justify-content: space-between; gap: 8px;
+  .pinbtn {
+    background: 0; border: 0; padding: 8px; font-family: var(--mono);
+    font-size: 15px; line-height: 1; color: var(--rule); flex: 0 0 auto;
   }
-  .board h2 {
-    font-family: var(--display); font-weight: 700; font-size: 22px;
-    letter-spacing: .06em; text-transform: uppercase; margin: 0; line-height: 1.1;
+  .pinbtn[aria-pressed="true"] { color: var(--flag); }
+
+  /* ============================ CHAIN VIEW ============================ */
+  .backbar {
+    display: flex; align-items: center; gap: 10px; padding: 12px 0 4px;
+  }
+  .backbar button {
+    background: 0; border: 0; font-family: var(--mono); font-size: 12px;
+    letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 8px 8px 8px 0;
   }
   .unverified {
-    font-family: var(--mono); font-size: 9px; letter-spacing: .08em;
-    text-transform: uppercase; color: var(--ink); background: #E0A93B;
-    padding: 3px 6px; white-space: nowrap;
+    font-family: var(--mono); font-size: 9px; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--ink); background: var(--flag); padding: 3px 6px; white-space: nowrap;
   }
-
-  .chain-tips { list-style: none; margin: 0; padding: 10px 0 2px; }
+  .chain-tips { list-style: none; margin: 10px 0 0; padding: 0; }
   .chain-tips li {
-    font-size: 14px; color: var(--muted); padding: 3px 0 3px 16px;
-    position: relative;
+    font-size: 14px; color: var(--muted); padding: 3px 0 3px 16px; position: relative;
   }
   .chain-tips li::before {
-    content: "→"; position: absolute; left: 0; color: var(--ink);
-    font-family: var(--mono); font-size: 12px;
+    content: "→"; position: absolute; left: 0; color: var(--ink); font-family: var(--mono); font-size: 12px;
   }
 
-  /* ---------- item card ---------- */
-  .item {
-    background: var(--panel); border: 1px solid var(--rule);
-    margin-top: 10px; padding: 12px;
-  }
+  /* ============================ ITEM CARD ============================ */
+  .item { background: var(--panel); border: 1px solid var(--rule); margin-top: 10px; padding: 12px; }
   .item.dim { opacity: .55; }
-  .item-head {
-    display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;
-  }
+  .item-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
   .item-name { font-weight: 600; font-size: 17px; line-height: 1.25; margin: 0; }
   .item-note { font-size: 13px; color: var(--muted); margin: 2px 0 0; }
+  .item-chain { font-family: var(--mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 3px; }
 
   .badge {
     flex: 0 0 auto; font-family: var(--mono); font-size: 10px; font-weight: 700;
     letter-spacing: .05em; text-transform: uppercase; padding: 4px 6px;
     border: 1.5px solid currentColor; white-space: nowrap;
   }
-  .badge.pass    { color: var(--pass); }
+  .badge.pass { color: var(--pass); }
   .badge.partial { color: var(--caution); }
-  .badge.fail    { color: var(--fail); }
+  .badge.fail { color: var(--fail); }
 
-  /* ---------- ticket ---------- */
   .ticket { font-family: var(--mono); font-size: 13px; margin-top: 10px; }
-  .line {
-    display: flex; justify-content: space-between; gap: 8px;
-    padding: 2px 0; font-variant-numeric: tabular-nums;
-  }
+  .line { display: flex; justify-content: space-between; gap: 8px; padding: 2px 0; font-variant-numeric: tabular-nums; }
   .line .k { color: var(--muted); }
   .line .v { font-weight: 500; }
   .line .v.hit { color: var(--pass); font-weight: 700; }
   .line .v.miss { color: var(--fail); font-weight: 700; }
-
-  .tear {
-    border: 0; border-top: 1px dashed var(--rule); margin: 9px 0;
-  }
+  .tear { border: 0; border-top: 1px dashed var(--rule); margin: 9px 0; }
 
   .mods-title {
     font-family: var(--display); font-weight: 600; font-size: 14px;
-    letter-spacing: .09em; text-transform: uppercase; color: var(--muted);
-    margin: 0 0 4px;
+    letter-spacing: .09em; text-transform: uppercase; color: var(--muted); margin: 0 0 4px;
   }
-  .mod {
-    display: flex; align-items: center; gap: 9px;
-    padding: 7px 0; cursor: pointer; min-height: 38px;
-  }
+  .mod { display: flex; align-items: center; gap: 9px; padding: 7px 0; cursor: pointer; min-height: 38px; }
   .mod input { width: 19px; height: 19px; accent-color: var(--pass); flex: 0 0 auto; margin: 0; }
   .mod .lbl { font-family: var(--body); font-size: 14px; flex: 1; }
-  .mod .dlt {
-    font-family: var(--mono); font-size: 11px; color: var(--muted);
-    text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap;
-  }
+  .mod .dlt { font-family: var(--mono); font-size: 11px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .mod input:focus-visible { outline: 3px solid var(--caution); outline-offset: 2px; }
 
-  .total {
-    border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink);
-    padding: 6px 0; margin-top: 8px;
-  }
+  .total { border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink); padding: 6px 0; margin-top: 8px; }
   .total .line { padding: 1px 0; font-weight: 700; }
   .total .k { color: var(--ink); }
 
-  /* ---------- add-ons ---------- */
-  .addons {
-    margin-top: 12px; border-left: 3px solid var(--caution);
-    background: #FBF6EC; padding: 10px 12px;
-  }
+  .addons { margin-top: 14px; border-left: 3px solid var(--caution); background: #FBF6EC; padding: 10px 12px; }
   .addons h3 {
-    font-family: var(--display); font-weight: 600; font-size: 15px;
-    letter-spacing: .07em; text-transform: uppercase; margin: 0 0 6px;
-    color: var(--caution);
+    font-family: var(--display); font-weight: 600; font-size: 15px; letter-spacing: .07em;
+    text-transform: uppercase; margin: 0 0 6px; color: var(--caution);
   }
-  .addon {
-    display: flex; justify-content: space-between; gap: 10px;
-    font-size: 14px; padding: 3px 0; font-variant-numeric: tabular-nums;
-  }
+  .addon { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; padding: 3px 0; }
   .addon .cost { font-family: var(--mono); font-size: 12px; color: var(--caution); font-weight: 700; white-space: nowrap; }
   .addon small { display: block; color: var(--muted); font-size: 12px; }
 
-  /* ---------- tips ---------- */
-  .tips { margin-top: 34px; border-top: 2px solid var(--ink); padding-top: 14px; }
+  .tips { margin-top: 32px; border-top: 2px solid var(--ink); padding-top: 14px; }
   .tips h2 {
     font-family: var(--display); font-weight: 700; font-size: 20px;
     letter-spacing: .06em; text-transform: uppercase; margin: 0 0 8px;
   }
-  .tips p { font-size: 14px; color: var(--ink); margin: 0 0 12px; padding-left: 20px; position: relative; }
-  .tips p::before {
-    content: "✓"; position: absolute; left: 0; top: 0; color: var(--pass);
-    font-family: var(--mono); font-weight: 700;
+  .tips p { font-size: 14px; margin: 0 0 12px; padding-left: 20px; position: relative; }
+  .tips p::before { content: "✓"; position: absolute; left: 0; top: 0; color: var(--pass); font-family: var(--mono); font-weight: 700; }
+
+  .empty { text-align: center; padding: 38px 20px; color: var(--muted); font-size: 15px; }
+  .empty b {
+    display: block; font-family: var(--display); font-size: 22px; letter-spacing: .05em;
+    text-transform: uppercase; color: var(--ink); margin-bottom: 6px;
   }
 
-  .empty {
-    text-align: center; padding: 40px 20px; color: var(--muted);
-    font-size: 15px;
-  }
-  .empty b { display: block; font-family: var(--display); font-size: 22px;
-    letter-spacing: .05em; text-transform: uppercase; color: var(--ink); margin-bottom: 6px; }
-
-  /* ---------- toast ---------- */
   #toast {
     position: fixed; left: 14px; right: 14px; bottom: calc(14px + env(safe-area-inset-bottom));
     max-width: 532px; margin: 0 auto; background: var(--ink); color: var(--paper);
-    font-family: var(--mono); font-size: 12px; letter-spacing: .03em;
-    padding: 12px 14px; z-index: 40;
-    transform: translateY(140%); transition: transform .28s ease;
+    font-family: var(--mono); font-size: 12px; padding: 12px 14px; z-index: 40;
+    transform: translateY(160%); transition: transform .28s ease;
     display: flex; justify-content: space-between; align-items: center; gap: 12px;
   }
   #toast.up { transform: translateY(0); }
   #toast button {
     background: var(--paper); color: var(--ink); border: 0; padding: 6px 10px;
     font-family: var(--mono); font-size: 11px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: .05em; cursor: pointer;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    * { transition: none !important; animation: none !important; }
-  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
 <body>
 
-<div class="wrap">
+<!-- ONBOARDING -->
+<div id="onboard" class="hidden"><div class="ob-inner" id="obInner"></div></div>
+
+<!-- APP -->
+<div class="wrap" id="shell">
   <header>
     <div class="brand">
-      <h1>Smart Order</h1>
-      <div class="stamp" id="stamp">Loading…</div>
+      <h1 id="hTitle">Smart Order</h1>
+      <button class="iconbtn" id="btnInfo" type="button" aria-label="About and disclaimer">Info</button>
     </div>
+    <div class="stamp" id="stamp">Loading…</div>
   </header>
-
-  <nav class="goals" id="goals" aria-label="Filter by goal"></nav>
-  <div class="rule-note" id="ruleNote"></div>
-
   <main id="app"></main>
-
-  <section class="tips" id="tips"></section>
 </div>
 
 <div id="toast" role="status" aria-live="polite">
   <span id="toastMsg"></span>
-  <button id="toastBtn" type="button">Reload</button>
+  <button id="toastBtn" type="button">OK</button>
 </div>
 
 <script>
 (function () {
   'use strict';
 
-  // ---------------------------------------------------------------- state
+  var DISCLAIMER_VERSION = '1';
+
   var DATA = null;
-  var goal = localStorage.getItem('so:goal') || 'none';
-  var picks = JSON.parse(localStorage.getItem('so:picks') || '{}'); // itemKey -> [modIndexes]
+  var goal   = localStorage.getItem('so:goal') || 'none';
+  var pins   = JSON.parse(localStorage.getItem('so:pins')  || '[]');
+  var picks  = JSON.parse(localStorage.getItem('so:picks') || '{}');
+  var query  = '';
+  var cat    = 'all';
+  var obStep = 0;
+  var obPicks = pins.slice();
+  var deferredInstall = null;
 
   var GOALS = [
     { id: 'none',    label: 'All items' },
@@ -272,18 +338,13 @@
 
   var FIELDS = ['cal','protein_g','net_carbs_g','fat_g','sat_fat_g','sodium_mg','sugar_g'];
 
-  // ---------------------------------------------------------------- helpers
-  function base(item) {
-    var o = {};
-    FIELDS.forEach(function (f) { o[f] = item[f] || 0; });
-    return o;
-  }
+  /* ------------------------------------------------ math */
+  function base(item) { var o = {}; FIELDS.forEach(function (f) { o[f] = item[f] || 0; }); return o; }
 
   function apply(vals, mods, idxs) {
-    var o = {};
-    FIELDS.forEach(function (f) { o[f] = vals[f]; });
+    var o = {}; FIELDS.forEach(function (f) { o[f] = vals[f]; });
     (idxs || []).forEach(function (i) {
-      var d = mods[i] && mods[i].delta || {};
+      var d = (mods[i] && mods[i].delta) || {};
       FIELDS.forEach(function (f) { if (d[f]) o[f] += d[f]; });
     });
     FIELDS.forEach(function (f) { o[f] = Math.max(0, Math.round(o[f] * 10) / 10); });
@@ -294,8 +355,7 @@
     var t = DATA.thresholds;
     if (g === 'protein') {
       if (v.cal <= 0) return false;
-      return v.protein_g >= t.protein.min_g &&
-             (v.protein_g / v.cal) * 100 >= t.protein.min_g_per_100cal;
+      return v.protein_g >= t.protein.min_g && (v.protein_g / v.cal) * 100 >= t.protein.min_g_per_100cal;
     }
     if (g === 'sodium') return v.sodium_mg <= t.sodium.max_mg;
     if (g === 'carbs')  return v.net_carbs_g <= t.carbs.max_net_g;
@@ -303,14 +363,12 @@
     return true;
   }
 
-  // Does this mod move the item toward the active goal?
   function improves(mod, g) {
     var d = mod.delta || {};
     if (g === 'sodium')  return (d.sodium_mg || 0) < 0;
     if (g === 'carbs')   return (d.net_carbs_g || 0) < 0;
     if (g === 'cal')     return (d.cal || 0) < 0;
     if (g === 'protein') {
-      // Improves protein density: adds protein, or cuts calories faster than protein.
       var dp = d.protein_g || 0, dc = d.cal || 0;
       if (dc < 0 && dp >= dc * 0.06) return true;
       return dp > 0 && dc <= 0;
@@ -318,10 +376,8 @@
     return false;
   }
 
-  // Greedily stack helpful mods until the item clears the goal.
   function suggest(item, g) {
-    var mods = item.mods || [];
-    var cur = base(item), out = [];
+    var mods = item.mods || [], cur = base(item), out = [];
     for (var i = 0; i < mods.length; i++) {
       if (passes(cur, g)) break;
       if (!improves(mods[i], g)) continue;
@@ -331,66 +387,140 @@
     return passes(cur, g) ? out : null;
   }
 
+  function fits(item, g) { return g === 'none' || passes(base(item), g) || !!suggest(item, g); }
+
   function n(x) { return Math.round(x).toLocaleString(); }
 
   function deltaStr(d) {
-    var parts = [];
-    if (d.cal)        parts.push((d.cal > 0 ? '+' : '') + n(d.cal) + ' cal');
-    if (d.sodium_mg)  parts.push((d.sodium_mg > 0 ? '+' : '') + n(d.sodium_mg) + 'mg');
-    if (d.net_carbs_g)parts.push((d.net_carbs_g > 0 ? '+' : '') + n(d.net_carbs_g) + 'c');
-    if (d.protein_g)  parts.push((d.protein_g > 0 ? '+' : '') + n(d.protein_g) + 'p');
-    if (d.sugar_g && !d.cal) parts.push((d.sugar_g > 0 ? '+' : '') + n(d.sugar_g) + 'g sug');
-    return parts.slice(0, 3).join(' · ');
+    var p = [];
+    if (d.cal)         p.push((d.cal > 0 ? '+' : '') + n(d.cal) + ' cal');
+    if (d.sodium_mg)   p.push((d.sodium_mg > 0 ? '+' : '') + n(d.sodium_mg) + 'mg');
+    if (d.net_carbs_g) p.push((d.net_carbs_g > 0 ? '+' : '') + n(d.net_carbs_g) + 'c');
+    if (d.protein_g)   p.push((d.protein_g > 0 ? '+' : '') + n(d.protein_g) + 'p');
+    if (d.sugar_g && !d.cal) p.push((d.sugar_g > 0 ? '+' : '') + n(d.sugar_g) + 'g sug');
+    return p.slice(0, 3).join(' · ');
   }
 
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+      return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c];
     });
   }
 
   function save() {
     localStorage.setItem('so:goal', goal);
+    localStorage.setItem('so:pins', JSON.stringify(pins));
     localStorage.setItem('so:picks', JSON.stringify(picks));
   }
 
-  // ---------------------------------------------------------------- render
+  function chainById(id) {
+    for (var i = 0; i < DATA.chains.length; i++) if (DATA.chains[i].id === id) return DATA.chains[i];
+    return null;
+  }
+
+  /* ------------------------------------------------ onboarding */
+  var OB = [
+    function () {
+      return '<div class="ob-step">' +
+        '<div class="ob-count">Step 1 of 3</div>' +
+        '<h2>Know before<br>you order</h2>' +
+        '<p>Pick what you care about — protein, sodium, carbs, calories — and see what actually clears it at each place.</p>' +
+        '<ul class="ob-list">' +
+          '<li>Every item shows how the numbers change when you change the order</li>' +
+          '<li>Nothing on the menu fits? It says so, instead of pretending</li>' +
+          '<li>Works with no signal once installed. No account, nothing leaves your phone</li>' +
+        '</ul>' +
+        '<div class="ob-actions"><button class="btn" data-ob="next">Next</button></div></div>';
+    },
+    function () {
+      return '<div class="ob-step">' +
+        '<div class="ob-count">Step 2 of 3</div>' +
+        '<h2>The honest part</h2>' +
+        '<p class="sub">Short, and worth reading once.</p>' +
+        '<div class="fineprint"><ul>' +
+          '<li><b>Numbers come from what each restaurant publishes.</b> They change without notice, and this app updates on its own schedule.</li>' +
+          '<li><b>Your actual order will vary.</b> Portions differ by location and by whoever is making it.</li>' +
+          '<li><b>No allergen information here.</b> If you have an allergy, ask the restaurant directly — every time.</li>' +
+          '<li><b>This is a reference tool, not advice.</b> It isn\'t medical or nutrition guidance. For anything that matters to your health, talk to a doctor or a dietitian.</li>' +
+          '<li><b>Chains marked "Seed data" haven\'t been verified yet.</b> You\'ll see the badge on the menu board.</li>' +
+        '</ul></div>' +
+        '<div class="ob-actions"><button class="btn" data-ob="next">Got it</button></div></div>';
+    },
+    function () {
+      var cards = DATA.chains.map(function (c) {
+        return '<button class="pick" type="button" data-pick="' + esc(c.id) + '" aria-pressed="' +
+          (obPicks.indexOf(c.id) > -1) + '"><span style="flex:1">' + esc(c.name) +
+          '</span><span class="tick">✓</span></button>';
+      }).join('');
+      var install = deferredInstall
+        ? '<button class="btn ghost" data-ob="install">Add to home screen</button>'
+        : (isIOS() ? '<p class="sub" style="margin-top:14px">To keep it offline: tap Share, then <b>Add to Home Screen</b>.</p>' : '');
+      return '<div class="ob-step">' +
+        '<div class="ob-count">Step 3 of 3</div>' +
+        '<h2>Your regulars</h2>' +
+        '<p class="sub">Pin the places you actually go. They\'ll sit at the top. You can change this any time.</p>' +
+        '<div class="pickgrid">' + cards + '</div>' +
+        '<div class="ob-actions"><button class="btn" data-ob="done">Start</button>' + install + '</div></div>';
+    }
+  ];
+
+  function isIOS() {
+    return /iP(hone|ad|od)/.test(navigator.userAgent) && !window.MSStream;
+  }
+
+  function renderOnboard() {
+    document.getElementById('onboard').classList.remove('hidden');
+    document.getElementById('shell').classList.add('hidden');
+    document.getElementById('obInner').innerHTML = OB[obStep]();
+    window.scrollTo(0, 0);
+  }
+
+  function finishOnboard() {
+    pins = obPicks.slice();
+    localStorage.setItem('so:agreed', DISCLAIMER_VERSION);
+    save();
+    document.getElementById('onboard').classList.add('hidden');
+    document.getElementById('shell').classList.remove('hidden');
+    go('#/');
+  }
+
+  /* ------------------------------------------------ shared pieces */
   function ruleText() {
     var t = DATA.thresholds;
-    if (goal === 'protein') return 'HIGH PROTEIN = ' + t.protein.min_g + 'g or more, and at least ' + t.protein.min_g_per_100cal + 'g per 100 cal.';
+    if (goal === 'protein') return 'HIGH PROTEIN = ' + t.protein.min_g + 'g+, and at least ' + t.protein.min_g_per_100cal + 'g per 100 cal.';
     if (goal === 'sodium')  return 'LOW SODIUM = ' + n(t.sodium.max_mg) + 'mg or less. Very little clears this.';
     if (goal === 'carbs')   return 'LOW CARB = ' + t.carbs.max_net_g + 'g net carbs or less.';
     if (goal === 'cal')     return 'UNDER 500 = ' + t.calories.max + ' calories or less, as ordered.';
     return 'Pick a goal to see what fits — and what fits once you change the order.';
   }
 
-  function renderGoals() {
-    document.getElementById('goals').innerHTML = GOALS.map(function (g) {
+  function goalChips() {
+    return '<div class="goalwrap"><div class="chiprow">' + GOALS.map(function (g) {
       return '<button class="chip" type="button" data-goal="' + g.id + '" aria-pressed="' +
         (goal === g.id) + '">' + esc(g.label) + '</button>';
-    }).join('');
-    document.getElementById('ruleNote').textContent = ruleText();
+    }).join('') + '</div><div class="rule-note">' + esc(ruleText()) + '</div></div>';
   }
 
   function statsLine(v, g) {
-    function cell(label, val, isTarget, ok) {
-      var cls = 'v' + (isTarget ? (ok ? ' hit' : ' miss') : '');
-      return '<div class="line"><span class="k">' + label + '</span><span class="' + cls + '">' + val + '</span></div>';
+    function cell(label, val, target, ok) {
+      return '<div class="line"><span class="k">' + label + '</span><span class="v' +
+        (target ? (ok ? ' hit' : ' miss') : '') + '">' + val + '</span></div>';
     }
-    return cell('Calories', n(v.cal), g === 'cal', v.cal <= DATA.thresholds.calories.max) +
-           cell('Protein', n(v.protein_g) + ' g', g === 'protein', passes(v, 'protein')) +
-           cell('Net carbs', n(v.net_carbs_g) + ' g', g === 'carbs', v.net_carbs_g <= DATA.thresholds.carbs.max_net_g) +
-           cell('Sodium', n(v.sodium_mg) + ' mg', g === 'sodium', v.sodium_mg <= DATA.thresholds.sodium.max_mg) +
-           cell('Sugar', n(v.sugar_g) + ' g', false, true) +
-           cell('Sat fat', n(v.sat_fat_g) + ' g', false, true);
+    var t = DATA.thresholds;
+    return cell('Calories',  n(v.cal), g === 'cal', v.cal <= t.calories.max) +
+           cell('Protein',   n(v.protein_g) + ' g', g === 'protein', passes(v, 'protein')) +
+           cell('Net carbs', n(v.net_carbs_g) + ' g', g === 'carbs', v.net_carbs_g <= t.carbs.max_net_g) +
+           cell('Sodium',    n(v.sodium_mg) + ' mg', g === 'sodium', v.sodium_mg <= t.sodium.max_mg) +
+           cell('Sugar',     n(v.sugar_g) + ' g', false) +
+           cell('Sat fat',   n(v.sat_fat_g) + ' g', false);
   }
 
-  function renderItem(chain, item, idx) {
+  function renderItem(chain, idx, showChain) {
+    var item = chain.items[idx];
     var key = chain.id + ':' + idx;
     var mods = item.mods || [];
     var b = base(item);
 
-    // First visit under a goal: pre-check the mods that make it work.
     if (!picks[key] && goal !== 'none' && !passes(b, goal)) {
       var s = suggest(item, goal);
       if (s && s.length) picks[key] = s;
@@ -398,174 +528,304 @@
     var sel = picks[key] || [];
     var v = apply(b, mods, sel);
 
-    var status, badge;
-    if (goal === 'none') { status = 'ok'; badge = ''; }
-    else if (passes(b, goal)) { status = 'pass'; badge = '<span class="badge pass">Fits as is</span>'; }
-    else if (passes(v, goal)) { status = 'partial'; badge = '<span class="badge partial">Fits with changes</span>'; }
-    else if (suggest(item, goal)) { status = 'partial'; badge = '<span class="badge partial">Can fit</span>'; }
-    else { status = 'fail'; badge = '<span class="badge fail">Doesn\'t fit</span>'; }
-
-    var modHtml = '';
-    if (mods.length) {
-      modHtml = '<hr class="tear"><p class="mods-title">Order it this way</p>' +
-        mods.map(function (m, i) {
-          return '<label class="mod"><input type="checkbox" data-key="' + key + '" data-mod="' + i + '"' +
-            (sel.indexOf(i) > -1 ? ' checked' : '') + '>' +
-            '<span class="lbl">' + esc(m.label) + '</span>' +
-            '<span class="dlt">' + esc(deltaStr(m.delta || {})) + '</span></label>';
-        }).join('');
+    var status = 'ok', badge = '';
+    if (goal !== 'none') {
+      if (passes(b, goal))      { status = 'pass';    badge = '<span class="badge pass">Fits as is</span>'; }
+      else if (passes(v, goal)) { status = 'partial'; badge = '<span class="badge partial">Fits with changes</span>'; }
+      else if (suggest(item, goal)) { status = 'partial'; badge = '<span class="badge partial">Can fit</span>'; }
+      else { status = 'fail'; badge = '<span class="badge fail">Doesn\'t fit</span>'; }
     }
 
+    var modHtml = mods.length
+      ? '<hr class="tear"><p class="mods-title">Order it this way</p>' + mods.map(function (m, i) {
+          return '<label class="mod"><input type="checkbox" data-key="' + key + '" data-mod="' + i + '"' +
+            (sel.indexOf(i) > -1 ? ' checked' : '') + '><span class="lbl">' + esc(m.label) +
+            '</span><span class="dlt">' + esc(deltaStr(m.delta || {})) + '</span></label>';
+        }).join('')
+      : '';
+
     var totalHtml = sel.length
-      ? '<div class="total"><div class="line"><span class="k">As you\'d order it</span>' +
-        '<span class="v">' + n(v.cal) + ' cal · ' + n(v.protein_g) + 'p · ' + n(v.sodium_mg) + 'mg</span></div></div>'
+      ? '<div class="total"><div class="line"><span class="k">As you\'d order it</span><span class="v">' +
+        n(v.cal) + ' cal · ' + n(v.protein_g) + 'p · ' + n(v.sodium_mg) + 'mg</span></div></div>'
       : '';
 
     return '<article class="item' + (status === 'fail' ? ' dim' : '') + '" data-key="' + key + '">' +
-      '<div class="item-head"><div><h3 class="item-name">' + esc(item.name) + '</h3>' +
-      (item.note ? '<p class="item-note">' + esc(item.note) + '</p>' : '') + '</div>' + badge + '</div>' +
-      '<div class="ticket">' + statsLine(v, goal) + modHtml + totalHtml + '</div>' +
-      '</article>';
+      '<div class="item-head"><div>' +
+      (showChain ? '<p class="item-chain">' + esc(chain.name) + '</p>' : '') +
+      '<h3 class="item-name">' + esc(item.name) + '</h3>' +
+      (item.note ? '<p class="item-note">' + esc(item.note) + '</p>' : '') +
+      '</div>' + badge + '</div>' +
+      '<div class="ticket">' + statsLine(v, goal) + modHtml + totalHtml + '</div></article>';
   }
 
-  function renderChain(chain) {
-    var items = chain.items.slice();
+  /* ------------------------------------------------ views */
+  function viewHome() {
+    return searchBar() + goalChips() + '<div id="results">' + homeResults() + '</div>';
+  }
+
+  function homeResults() {
+    var q = query.trim().toLowerCase();
+
+    // Search matches items across every chain.
+    if (q) {
+      var hits = [];
+      DATA.chains.forEach(function (c) {
+        c.items.forEach(function (it, i) {
+          if ((it.name + ' ' + (it.note || '') + ' ' + c.name).toLowerCase().indexOf(q) > -1 && fits(it, goal)) {
+            hits.push(renderItem(c, i, true));
+          }
+        });
+      });
+      return hits.length ? hits.join('') :
+        '<div class="empty"><b>No match</b>Nothing by that name fits the current goal. Try clearing the goal.</div>';
+    }
+
+    var pinned = DATA.chains.filter(function (c) { return pins.indexOf(c.id) > -1; });
+    var rest   = DATA.chains.filter(function (c) { return pins.indexOf(c.id) === -1; });
+
+    function card(c) {
+      var count = c.items.filter(function (it) { return fits(it, goal); }).length;
+      var isPin = pins.indexOf(c.id) > -1;
+      return '<div style="display:flex;align-items:stretch;gap:0">' +
+        '<button class="chaincard' + (isPin ? ' pinned' : '') + '" type="button" data-chain="' + esc(c.id) + '">' +
+          '<span class="nm">' + esc(c.name) + '</span>' +
+          '<span class="meta">' + (goal !== 'none'
+            ? '<span class="fit">' + count + ' fit</span>' + c.items.length + ' items'
+            : c.items.length + ' items') + '</span>' +
+          '<span class="arw">›</span>' +
+        '</button>' +
+        '<button class="pinbtn" type="button" data-pin="' + esc(c.id) + '" aria-pressed="' + isPin +
+        '" aria-label="Pin ' + esc(c.name) + '" style="align-self:center">★</button>' +
+        '</div>';
+    }
+
+    var out = '';
+    if (pinned.length) out += '<div class="sechead">Your regulars</div>' + pinned.map(card).join('');
+    out += '<div class="sechead">' + (pinned.length ? 'Everywhere else' : 'All places') + '</div>' + rest.map(card).join('');
+    out += '<div class="tips"><h2>Rules that always hold</h2>' +
+      (DATA.tips || []).map(function (t) { return '<p>' + esc(t) + '</p>'; }).join('') + '</div>';
+    return out;
+  }
+
+  function searchBar() {
+    return '<div class="searchbar"><input id="q" type="search" placeholder="Search a place or an item" ' +
+      'value="' + esc(query) + '" autocomplete="off" enterkeyhint="search"></div>';
+  }
+
+  function viewChain(id) {
+    var c = chainById(id);
+    if (!c) return '<div class="empty"><b>Not found</b>That place isn\'t on file.</div>';
+
+    var cats = [];
+    c.items.forEach(function (it) { if (it.cat && cats.indexOf(it.cat) === -1) cats.push(it.cat); });
+    if (cat !== 'all' && cats.indexOf(cat) === -1) cat = 'all';
+
+    var idxs = c.items.map(function (_, i) { return i; }).filter(function (i) {
+      var it = c.items[i];
+      if (cat !== 'all' && it.cat !== cat) return false;
+      return fits(it, goal);
+    });
 
     if (goal !== 'none') {
-      items = items.filter(function (it) {
-        return passes(base(it), goal) || suggest(it, goal);
-      });
-      items.sort(function (a, c) {
-        var pa = passes(base(a), goal) ? 0 : 1, pc = passes(base(c), goal) ? 0 : 1;
-        if (pa !== pc) return pa - pc;
-        if (goal === 'protein') return (c.protein_g / c.cal) - (a.protein_g / a.cal);
-        if (goal === 'sodium')  return a.sodium_mg - c.sodium_mg;
-        if (goal === 'carbs')   return a.net_carbs_g - c.net_carbs_g;
-        return a.cal - c.cal;
+      idxs.sort(function (a, b) {
+        var A = c.items[a], B = c.items[b];
+        var pa = passes(base(A), goal) ? 0 : 1, pb = passes(base(B), goal) ? 0 : 1;
+        if (pa !== pb) return pa - pb;
+        if (goal === 'protein') return (B.protein_g / B.cal) - (A.protein_g / A.cal);
+        if (goal === 'sodium')  return A.sodium_mg - B.sodium_mg;
+        if (goal === 'carbs')   return A.net_carbs_g - B.net_carbs_g;
+        return A.cal - B.cal;
       });
     }
 
-    if (!items.length) return '';
+    var catRow = cats.length > 1
+      ? '<div class="chiprow cats"><button class="chip" type="button" data-cat="all" aria-pressed="' +
+        (cat === 'all') + '">All</button>' + cats.map(function (k) {
+          return '<button class="chip" type="button" data-cat="' + esc(k) + '" aria-pressed="' +
+            (cat === k) + '">' + esc(k) + '</button>';
+        }).join('') + '</div>'
+      : '';
 
-    var tips = (chain.tips || []).map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('');
-    var addons = (chain.addons || []).map(function (a) {
+    var tips = (c.tips || []).map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('');
+    var addons = (c.addons || []).map(function (a) {
       var cost = [];
       if (a.cal) cost.push('+' + n(a.cal) + ' cal');
       if (a.sodium_mg) cost.push('+' + n(a.sodium_mg) + 'mg');
       if (a.sugar_g) cost.push('+' + n(a.sugar_g) + 'g sugar');
       return '<div class="addon"><span>' + esc(a.name) +
-        (a.note ? '<small>' + esc(a.note) + '</small>' : '') + '</span>' +
-        '<span class="cost">' + cost.join(' · ') + '</span></div>';
+        (a.note ? '<small>' + esc(a.note) + '</small>' : '') +
+        '</span><span class="cost">' + cost.join(' · ') + '</span></div>';
     }).join('');
 
-    // Track original indexes so mod state stays stable through sorting.
-    var idxOf = {};
-    chain.items.forEach(function (it, i) { idxOf[it.name] = i; });
+    var isPin = pins.indexOf(c.id) > -1;
 
-    return '<section class="chain">' +
-      '<div class="board"><h2>' + esc(chain.name) + '</h2>' +
-      (chain.verified === false ? '<span class="unverified">Seed data</span>' : '') + '</div>' +
+    return '<div class="backbar"><button type="button" data-back="1">‹ All places</button>' +
+      (c.verified === false ? '<span class="unverified">Seed data</span>' : '') +
+      '<button class="pinbtn" type="button" data-pin="' + esc(c.id) + '" aria-pressed="' + isPin +
+      '" aria-label="Pin" style="margin-left:auto">★</button></div>' +
       (tips ? '<ul class="chain-tips">' + tips + '</ul>' : '') +
-      items.map(function (it) { return renderItem(chain, it, idxOf[it.name]); }).join('') +
-      (addons ? '<div class="addons"><h3>Watch the add-ons</h3>' + addons + '</div>' : '') +
-      '</section>';
+      goalChips() + catRow +
+      (idxs.length
+        ? idxs.map(function (i) { return renderItem(c, i, false); }).join('')
+        : '<div class="empty"><b>Nothing clears this</b>No item here fits that goal, even with changes. That\'s a real answer.</div>') +
+      (addons ? '<div class="addons"><h3>Watch the add-ons</h3>' + addons + '</div>' : '');
+  }
+
+  function viewAbout() {
+    return '<div class="backbar"><button type="button" data-back="1">‹ Back</button></div>' +
+      '<h2 style="font-family:var(--display);text-transform:uppercase;letter-spacing:.03em;font-size:30px;margin:6px 0 12px">Read this</h2>' +
+      '<div class="fineprint"><ul>' +
+        '<li><b>Numbers come from what each restaurant publishes.</b> They change without notice.</li>' +
+        '<li><b>Your actual order will vary</b> by location and by whoever makes it.</li>' +
+        '<li><b>No allergen information here.</b> If you have an allergy, ask the restaurant directly.</li>' +
+        '<li><b>This is a reference tool, not advice.</b> Not medical or nutrition guidance. For anything affecting your health, talk to a doctor or dietitian.</li>' +
+      '</ul></div>' +
+      '<p style="font-family:var(--mono);font-size:12px;color:var(--muted)">Menu data ' + esc(DATA.updated || DATA.version) +
+      ' · v' + esc(DATA.version) + '</p>' +
+      '<button class="btn ghost" type="button" data-ob="redo">Redo setup</button>';
+  }
+
+  /* ------------------------------------------------ router */
+  function go(hash) {
+    if (location.hash === hash) render(); else location.hash = hash;
   }
 
   function render() {
-    renderGoals();
+    if (!DATA) return;
+    if (localStorage.getItem('so:agreed') !== DISCLAIMER_VERSION) { renderOnboard(); return; }
 
-    var html = DATA.chains.map(renderChain).join('');
-    document.getElementById('app').innerHTML = html || (
-      '<div class="empty"><b>Nothing clears this one</b>' +
-      'No item on file fits that goal, even with changes. That\'s a real answer — try a different goal.</div>'
-    );
+    var h = location.hash || '#/';
+    var app = document.getElementById('app');
+    var title = 'Smart Order';
 
-    document.getElementById('tips').innerHTML =
-      '<h2>Rules that always hold</h2>' +
-      (DATA.tips || []).map(function (t) { return '<p>' + esc(t) + '</p>'; }).join('');
+    if (h.indexOf('#/c/') === 0) {
+      var c = chainById(h.slice(4));
+      title = c ? c.name : 'Smart Order';
+      app.innerHTML = viewChain(h.slice(4));
+    } else if (h === '#/about') {
+      title = 'About';
+      app.innerHTML = viewAbout();
+    } else {
+      cat = 'all';
+      app.innerHTML = viewHome();
+    }
 
-    document.getElementById('stamp').innerHTML =
-      'Menu data<br><b>' + esc(DATA.updated || DATA.version) + '</b>';
-
+    document.getElementById('hTitle').textContent = title;
+    document.getElementById('stamp').innerHTML = 'Menu data <b>' + esc(DATA.updated || DATA.version) + '</b>';
     save();
   }
 
-  // ---------------------------------------------------------------- events
+  window.addEventListener('hashchange', function () { render(); window.scrollTo(0, 0); });
+
+  /* ------------------------------------------------ events */
   document.addEventListener('click', function (e) {
-    var chip = e.target.closest('.chip');
-    if (chip) {
-      goal = chip.dataset.goal;
-      picks = {};              // fresh suggestions for the new goal
-      render();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    var t = e.target;
+
+    var ob = t.closest('[data-ob]');
+    if (ob) {
+      var a = ob.dataset.ob;
+      if (a === 'next') { obStep++; renderOnboard(); }
+      if (a === 'done') { finishOnboard(); }
+      if (a === 'redo') { obStep = 0; obPicks = pins.slice(); renderOnboard(); }
+      if (a === 'install' && deferredInstall) {
+        deferredInstall.prompt();
+        deferredInstall.userChoice.finally(function () { deferredInstall = null; });
+      }
+      return;
     }
+
+    var pk = t.closest('[data-pick]');
+    if (pk) {
+      var id = pk.dataset.pick, at = obPicks.indexOf(id);
+      if (at > -1) obPicks.splice(at, 1); else obPicks.push(id);
+      pk.setAttribute('aria-pressed', at === -1);
+      return;
+    }
+
+    var pin = t.closest('[data-pin]');
+    if (pin) {
+      var pid = pin.dataset.pin, pi = pins.indexOf(pid);
+      if (pi > -1) pins.splice(pi, 1); else pins.push(pid);
+      save(); render();
+      return;
+    }
+
+    var chip = t.closest('[data-goal]');
+    if (chip) { goal = chip.dataset.goal; picks = {}; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+
+    var cc = t.closest('[data-cat]');
+    if (cc) { cat = cc.dataset.cat; render(); return; }
+
+    var card = t.closest('[data-chain]');
+    if (card) { query = ''; cat = 'all'; go('#/c/' + card.dataset.chain); return; }
+
+    if (t.closest('[data-back]')) { history.length > 1 ? history.back() : go('#/'); return; }
+    if (t.id === 'btnInfo') { go('#/about'); return; }
+  });
+
+  document.addEventListener('input', function (e) {
+    if (e.target.id !== 'q') return;
+    query = e.target.value;
+    // Repaint only the results — never the input, or the keyboard closes mid-word.
+    var box = document.getElementById('results');
+    if (box) box.innerHTML = homeResults();
   });
 
   document.addEventListener('change', function (e) {
     var box = e.target;
     if (!box.matches('.mod input')) return;
     var key = box.dataset.key, i = +box.dataset.mod;
-    var sel = picks[key] || [];
-    var at = sel.indexOf(i);
+    var sel = picks[key] || [], at = sel.indexOf(i);
     if (box.checked && at === -1) sel.push(i);
     if (!box.checked && at > -1) sel.splice(at, 1);
-    picks[key] = sel;
-    save();
+    picks[key] = sel; save();
 
-    // Repaint just this card so the page doesn't jump under your thumb.
-    var card = document.querySelector('.item[data-key="' + key + '"]');
-    var parts = key.split(':');
-    var chain = DATA.chains.filter(function (c) { return c.id === parts[0]; })[0];
-    if (card && chain) {
+    var parts = key.split(':'), chain = chainById(parts[0]);
+    var cardEl = document.querySelector('.item[data-key="' + key + '"]');
+    if (cardEl && chain) {
       var tmp = document.createElement('div');
-      tmp.innerHTML = renderItem(chain, chain.items[+parts[1]], +parts[1]);
-      card.replaceWith(tmp.firstChild);
+      tmp.innerHTML = renderItem(chain, +parts[1], !!cardEl.querySelector('.item-chain'));
+      cardEl.replaceWith(tmp.firstChild);
     }
   });
 
-  // ---------------------------------------------------------------- toast
-  var toast = document.getElementById('toast');
-  function showToast(msg, action) {
-    document.getElementById('toastMsg').textContent = msg;
-    var btn = document.getElementById('toastBtn');
-    btn.onclick = action || function () { toast.classList.remove('up'); };
-    toast.classList.add('up');
-    if (!action) setTimeout(function () { toast.classList.remove('up'); }, 4000);
-  }
-
-  // ---------------------------------------------------------------- boot + sync
-  function load(opts) {
-    return fetch('./data.json', opts).then(function (r) { return r.json(); });
-  }
-
-  load().then(function (d) {
-    DATA = d;
-    render();
-    checkVersion();
-  }).catch(function () {
-    document.getElementById('app').innerHTML =
-      '<div class="empty"><b>No menu data</b>Connect once to download the menus. After that it works offline.</div>';
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault(); deferredInstall = e;
+    if (!document.getElementById('onboard').classList.contains('hidden') && obStep === 2) renderOnboard();
   });
 
-  // The 30-day sync: a few hundred bytes, checked on every launch.
+  /* ------------------------------------------------ toast */
+  var toast = document.getElementById('toast');
+  function showToast(msg) {
+    document.getElementById('toastMsg').textContent = msg;
+    document.getElementById('toastBtn').onclick = function () { toast.classList.remove('up'); };
+    toast.classList.add('up');
+    setTimeout(function () { toast.classList.remove('up'); }, 4500);
+  }
+
+  /* ------------------------------------------------ boot + sync */
+  function load(opts) { return fetch('./data.json', opts).then(function (r) { return r.json(); }); }
+
+  load().then(function (d) { DATA = d; render(); checkVersion(); })
+    .catch(function () {
+      document.getElementById('app').innerHTML =
+        '<div class="empty"><b>No menu data</b>Connect once to download the menus. After that it works offline.</div>';
+    });
+
   function checkVersion() {
     fetch('./version.json', { cache: 'no-store' })
       .then(function (r) { return r.json(); })
       .then(function (v) {
         if (!v.version || v.version === DATA.version) return;
         return load({ cache: 'reload' }).then(function (d) {
-          DATA = d;
-          render();
-          showToast('Menus updated — ' + (d.updated || d.version));
+          DATA = d; render(); showToast('Menus updated — ' + (d.updated || d.version));
         });
       })
-      .catch(function () { /* offline is fine; cached data stands */ });
+      .catch(function () {});
   }
 
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function () {
-      navigator.serviceWorker.register('./sw.js').catch(function () {});
-    });
+    window.addEventListener('load', function () { navigator.serviceWorker.register('./sw.js').catch(function () {}); });
   }
 })();
 </script>
