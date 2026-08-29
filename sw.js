@@ -1,4 +1,4 @@
-const CACHE = 'smart-order-v1';
+const CACHE = 'smart-order-v2';
 
 const SHELL = [
   './',
