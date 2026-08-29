@@ -1,0 +1,192 @@
+{
+  "_readme": "EDIT THIS FILE ONLY. Bump `version` and `updated` whenever you change anything, and make version.json match. Every chain has verified:false until you check its numbers against the chain's official nutrition page.",
+
+  "version": "2026.08.28-seed",
+  "updated": "August 2026",
+
+  "thresholds": {
+    "protein": { "min_g": 20, "min_g_per_100cal": 6 },
+    "sodium": { "max_mg": 600 },
+    "carbs": { "max_net_g": 15 },
+    "calories": { "max": 500 }
+  },
+
+  "tips": [
+    "Sauce is the quietest calorie source on the menu. A single dipping cup runs 100–200 cal and 5–10g sugar. Ask for it on the side and use half.",
+    "Cheese adds roughly 90–120 cal, 8g fat and 200mg sodium per slice or scoop. It's the single easiest thing to drop.",
+    "Fries are almost never worth it here. A medium adds 350–450 cal and turns a reasonable order into a heavy one. A side salad or fruit cup is a 200–400 cal swing.",
+    "A medium regular soda is 200–300 cal of pure sugar and doesn't fill you up. Unsweet tea, diet, or water is the biggest single win on the whole order.",
+    "Grilled beats crispy every time — usually 150–250 fewer calories and about half the fat for the same protein.",
+    "Sodium is the hardest target in fast food. Almost nothing clears 600mg once it has bread, cheese and sauce. Bowls and salads are where you'll find it.",
+    "Skipping the bun cuts about 120–200 cal and 25–35g carbs, and most places will serve it in a bowl or lettuce wrap if you ask."
+  ],
+
+  "chains": [
+    {
+      "id": "chipotle",
+      "name": "Chipotle",
+      "verified": false,
+      "tips": [
+        "Build a bowl, not a burrito. The tortilla alone is about 320 cal and 50g carbs.",
+        "Fajita veggies instead of rice keeps the bowl full-sized for almost no calories.",
+        "Sodium is the weak spot. Salsas carry 200–550mg each — pick one, not three."
+      ],
+      "addons": [
+        { "name": "Chips & guacamole", "cal": 770, "sodium_mg": 570, "note": "Roughly doubles the order." },
+        { "name": "Flour tortilla (make it a burrito)", "cal": 320, "sodium_mg": 600 },
+        { "name": "Queso blanco", "cal": 120, "sodium_mg": 250 }
+      ],
+      "items": [
+        {
+          "name": "Chicken Burrito Bowl",
+          "cat": "Bowls",
+          "note": "White rice, black beans, tomato salsa, cheese",
+          "cal": 655, "protein_g": 50, "net_carbs_g": 55, "fat_g": 21, "sat_fat_g": 8, "sodium_mg": 1610, "sugar_g": 4,
+          "mods": [
+            { "label": "No white rice", "delta": { "cal": -210, "net_carbs_g": -40, "sodium_mg": -350, "protein_g": -4 } },
+            { "label": "No cheese", "delta": { "cal": -110, "fat_g": -8, "sat_fat_g": -6, "sodium_mg": -190, "protein_g": -6 } },
+            { "label": "Swap beans for fajita veg", "delta": { "cal": -110, "net_carbs_g": -9, "sodium_mg": -40, "protein_g": -8 } },
+            { "label": "Salsa on the side", "delta": { "sodium_mg": -400, "cal": -15 } }
+          ]
+        },
+        {
+          "name": "Chicken Salad",
+          "cat": "Salads",
+          "note": "Supergreens, chicken, fajita veg, tomato salsa, no dressing",
+          "cal": 300, "protein_g": 34, "net_carbs_g": 10, "fat_g": 9, "sat_fat_g": 2.5, "sodium_mg": 940, "sugar_g": 5,
+          "mods": [
+            { "label": "Add vinaigrette", "delta": { "cal": 220, "fat_g": 16, "sodium_mg": 850, "sugar_g": 10 } },
+            { "label": "Add black beans", "delta": { "cal": 130, "protein_g": 8, "net_carbs_g": 12, "sodium_mg": 210 } },
+            { "label": "Salsa on the side", "delta": { "sodium_mg": -400, "cal": -15 } }
+          ]
+        },
+        {
+          "name": "Steak Burrito Bowl",
+          "cat": "Bowls",
+          "note": "Brown rice, black beans, tomato salsa",
+          "cal": 590, "protein_g": 41, "net_carbs_g": 57, "fat_g": 16, "sat_fat_g": 5, "sodium_mg": 1450, "sugar_g": 4,
+          "mods": [
+            { "label": "No rice", "delta": { "cal": -210, "net_carbs_g": -36, "sodium_mg": -300, "protein_g": -4 } },
+            { "label": "Swap beans for fajita veg", "delta": { "cal": -110, "net_carbs_g": -9, "sodium_mg": -40, "protein_g": -8 } }
+          ]
+        },
+        {
+          "name": "Chicken Burrito",
+          "cat": "Burritos",
+          "note": "Decoy — same fillings, plus the tortilla",
+          "cal": 975, "protein_g": 54, "net_carbs_g": 105, "fat_g": 30, "sat_fat_g": 11, "sodium_mg": 2210, "sugar_g": 5,
+          "mods": [
+            { "label": "Make it a bowl", "delta": { "cal": -320, "net_carbs_g": -50, "sodium_mg": -600, "protein_g": -4 } }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "chick-fil-a",
+      "name": "Chick-fil-A",
+      "verified": false,
+      "tips": [
+        "Grilled nuggets are the best protein-per-calorie item on the board.",
+        "The house sauce is 140 cal and 6g sugar per cup. Two cups is a side of fries you didn't order.",
+        "Market Salad numbers are for the salad alone. The dressing packet is where the calories live."
+      ],
+      "addons": [
+        { "name": "Waffle fries, medium", "cal": 420, "sodium_mg": 240, "note": "Large is about 520." },
+        { "name": "Chick-fil-A Sauce", "cal": 140, "sodium_mg": 140, "sugar_g": 6 },
+        { "name": "Lemonade, medium", "cal": 220, "sugar_g": 50 }
+      ],
+      "items": [
+        {
+          "name": "Grilled Nuggets, 8 ct",
+          "cat": "Entrées",
+          "cal": 130, "protein_g": 25, "net_carbs_g": 1, "fat_g": 3, "sat_fat_g": 1, "sodium_mg": 440, "sugar_g": 1,
+          "mods": [
+            { "label": "Go 12 ct", "delta": { "cal": 65, "protein_g": 13, "sodium_mg": 220, "fat_g": 1.5 } }
+          ]
+        },
+        {
+          "name": "Grilled Chicken Sandwich",
+          "cat": "Sandwiches",
+          "cal": 390, "protein_g": 28, "net_carbs_g": 41, "fat_g": 12, "sat_fat_g": 2, "sodium_mg": 770, "sugar_g": 10,
+          "mods": [
+            { "label": "No bun (order it as a filet)", "delta": { "cal": -160, "net_carbs_g": -35, "sodium_mg": -230 } },
+            { "label": "No honey roasted BBQ sauce", "delta": { "cal": -45, "sugar_g": -6, "sodium_mg": -80 } }
+          ]
+        },
+        {
+          "name": "Market Salad with grilled filet",
+          "cat": "Salads",
+          "note": "Before dressing",
+          "cal": 340, "protein_g": 28, "net_carbs_g": 23, "fat_g": 14, "sat_fat_g": 5, "sodium_mg": 800, "sugar_g": 17,
+          "mods": [
+            { "label": "Add avocado lime ranch", "delta": { "cal": 310, "fat_g": 32, "sodium_mg": 560, "sugar_g": 2 } },
+            { "label": "Add light Italian instead", "delta": { "cal": 45, "fat_g": 3, "sodium_mg": 570, "sugar_g": 2 } },
+            { "label": "No granola", "delta": { "cal": -70, "net_carbs_g": -10, "sugar_g": -4 } }
+          ]
+        },
+        {
+          "name": "Spicy Chicken Sandwich",
+          "cat": "Sandwiches",
+          "note": "Decoy — close on calories, brutal on sodium",
+          "cal": 450, "protein_g": 28, "net_carbs_g": 42, "fat_g": 19, "sat_fat_g": 4, "sodium_mg": 1730, "sugar_g": 6,
+          "mods": [
+            { "label": "Swap to grilled", "delta": { "cal": -60, "fat_g": -7, "sodium_mg": -960 } }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "whataburger",
+      "name": "Whataburger",
+      "verified": false,
+      "tips": [
+        "The Jr. is the whole trick here. Same sandwich, roughly half of everything.",
+        "Grilled chicken looks lean until you check sodium — it's over 1,200mg before you add anything.",
+        "Breakfast is the heaviest part of the menu. Taquitos run 380–530 cal each."
+      ],
+      "addons": [
+        { "name": "French fries, medium", "cal": 420, "sodium_mg": 260, "note": "Large is about 530." },
+        { "name": "Dr Pepper, medium", "cal": 250, "sugar_g": 65 },
+        { "name": "Creamy pepper sauce", "cal": 130, "sodium_mg": 220 }
+      ],
+      "items": [
+        {
+          "name": "Whataburger Jr.",
+          "cat": "Burgers",
+          "cal": 320, "protein_g": 16, "net_carbs_g": 28, "fat_g": 15, "sat_fat_g": 5, "sodium_mg": 650, "sugar_g": 6,
+          "mods": [
+            { "label": "No mustard/mayo", "delta": { "cal": -50, "fat_g": -5, "sodium_mg": -110 } },
+            { "label": "Add mustard, skip mayo", "delta": { "cal": -90, "fat_g": -10, "sodium_mg": -40 } }
+          ]
+        },
+        {
+          "name": "Grilled Chicken Sandwich",
+          "cat": "Sandwiches",
+          "cal": 430, "protein_g": 34, "net_carbs_g": 48, "fat_g": 9, "sat_fat_g": 2, "sodium_mg": 1240, "sugar_g": 9,
+          "mods": [
+            { "label": "No bun", "delta": { "cal": -190, "net_carbs_g": -42, "sodium_mg": -330 } },
+            { "label": "No sauce", "delta": { "cal": -100, "fat_g": -11, "sodium_mg": -180 } }
+          ]
+        },
+        {
+          "name": "Whataburger",
+          "cat": "Burgers",
+          "note": "Decoy — the default order",
+          "cal": 590, "protein_g": 29, "net_carbs_g": 52, "fat_g": 27, "sat_fat_g": 9, "sodium_mg": 1160, "sugar_g": 11,
+          "mods": [
+            { "label": "Order the Jr. instead", "delta": { "cal": -270, "protein_g": -13, "net_carbs_g": -24, "fat_g": -12, "sodium_mg": -510 } },
+            { "label": "No cheese", "delta": { "cal": -90, "fat_g": -7, "sat_fat_g": -4, "sodium_mg": -200, "protein_g": -5 } }
+          ]
+        },
+        {
+          "name": "Apple Slices",
+          "cat": "Sides",
+          "cal": 30, "protein_g": 0, "net_carbs_g": 6, "fat_g": 0, "sat_fat_g": 0, "sodium_mg": 0, "sugar_g": 6,
+          "mods": []
+        }
+      ]
+    }
+  ]
+}
