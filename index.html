@@ -228,6 +228,17 @@
   .badge.pass { color: var(--pass); }
   .badge.partial { color: var(--caution); }
   .badge.fail { color: var(--fail); }
+  .badge.unknown { color: var(--muted); }
+  .line .v.none { color: var(--rule); }
+  .chaincard .meta .nofit { color: var(--muted); font-weight: 700; display: block; }
+  .nodata {
+    margin-top: 16px; padding: 10px 12px; background: var(--panel);
+    border: 1px dashed var(--rule); font-size: 13px; color: var(--muted);
+  }
+  .nodata b {
+    display: block; font-family: var(--display); font-size: 15px; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--ink); margin-bottom: 2px;
+  }
 
   .ticket { font-family: var(--mono); font-size: 13px; margin-top: 10px; }
   .line { display: flex; justify-content: space-between; gap: 8px; padding: 2px 0; font-variant-numeric: tabular-nums; }
@@ -339,20 +350,43 @@
   var FIELDS = ['cal','protein_g','net_carbs_g','fat_g','sat_fat_g','sodium_mg','sugar_g'];
 
   /* ------------------------------------------------ math */
-  function base(item) { var o = {}; FIELDS.forEach(function (f) { o[f] = item[f] || 0; }); return o; }
+  // A null field means "we don't have this number" — never coerce it to 0,
+  // or an item with no sodium data would silently pass the low-sodium filter.
+  function base(item) {
+    var o = {};
+    FIELDS.forEach(function (f) {
+      o[f] = (item[f] === null || item[f] === undefined) ? null : item[f];
+    });
+    return o;
+  }
+
+  var GOAL_FIELD = { protein: 'protein_g', sodium: 'sodium_mg', carbs: 'net_carbs_g', cal: 'cal' };
+  var GOAL_NOUN  = { protein: 'protein', sodium: 'sodium', carbs: 'carb', cal: 'calorie' };
+
+  // Does this item have the number the active goal needs?
+  function known(v, g) {
+    if (g === 'none') return true;
+    if (g === 'protein') return typeof v.protein_g === 'number' && typeof v.cal === 'number';
+    return typeof v[GOAL_FIELD[g]] === 'number';
+  }
 
   function apply(vals, mods, idxs) {
     var o = {}; FIELDS.forEach(function (f) { o[f] = vals[f]; });
     (idxs || []).forEach(function (i) {
       var d = (mods[i] && mods[i].delta) || {};
-      FIELDS.forEach(function (f) { if (d[f]) o[f] += d[f]; });
+      FIELDS.forEach(function (f) {
+        if (d[f] && typeof o[f] === 'number') o[f] += d[f];
+      });
     });
-    FIELDS.forEach(function (f) { o[f] = Math.max(0, Math.round(o[f] * 10) / 10); });
+    FIELDS.forEach(function (f) {
+      if (typeof o[f] === 'number') o[f] = Math.max(0, Math.round(o[f] * 10) / 10);
+    });
     return o;
   }
 
   function passes(v, g) {
     var t = DATA.thresholds;
+    if (!known(v, g)) return false;
     if (g === 'protein') {
       if (v.cal <= 0) return false;
       return v.protein_g >= t.protein.min_g && (v.protein_g / v.cal) * 100 >= t.protein.min_g_per_100cal;
@@ -387,9 +421,19 @@
     return passes(cur, g) ? out : null;
   }
 
-  function fits(item, g) { return g === 'none' || passes(base(item), g) || !!suggest(item, g); }
+  function fits(item, g) {
+    if (g === 'none') return true;
+    if (!known(base(item), g)) return false;
+    return passes(base(item), g) || !!suggest(item, g);
+  }
 
-  function n(x) { return Math.round(x).toLocaleString(); }
+  // Item can't be judged against this goal because the number is missing.
+  function unknownFor(item, g) { return g !== 'none' && !known(base(item), g); }
+
+  function n(x) {
+    if (typeof x !== 'number') return '—';
+    return Math.round(x).toLocaleString();
+  }
 
   function deltaStr(d) {
     var p = [];
@@ -503,8 +547,9 @@
 
   function statsLine(v, g) {
     function cell(label, val, target, ok) {
+      var missing = val === '—' || String(val).indexOf('—') === 0;
       return '<div class="line"><span class="k">' + label + '</span><span class="v' +
-        (target ? (ok ? ' hit' : ' miss') : '') + '">' + val + '</span></div>';
+        (missing ? ' none' : (target ? (ok ? ' hit' : ' miss') : '')) + '">' + val + '</span></div>';
     }
     var t = DATA.thresholds;
     return cell('Calories',  n(v.cal), g === 'cal', v.cal <= t.calories.max) +
@@ -529,7 +574,10 @@
     var v = apply(b, mods, sel);
 
     var status = 'ok', badge = '';
-    if (goal !== 'none') {
+    if (goal !== 'none' && !known(b, goal)) {
+      status = 'unknown';
+      badge = '<span class="badge unknown">No ' + esc(GOAL_NOUN[goal]) + ' data</span>';
+    } else if (goal !== 'none') {
       if (passes(b, goal))      { status = 'pass';    badge = '<span class="badge pass">Fits as is</span>'; }
       else if (passes(v, goal)) { status = 'partial'; badge = '<span class="badge partial">Fits with changes</span>'; }
       else if (suggest(item, goal)) { status = 'partial'; badge = '<span class="badge partial">Can fit</span>'; }
@@ -549,7 +597,7 @@
         n(v.cal) + ' cal · ' + n(v.protein_g) + 'p · ' + n(v.sodium_mg) + 'mg</span></div></div>'
       : '';
 
-    return '<article class="item' + (status === 'fail' ? ' dim' : '') + '" data-key="' + key + '">' +
+    return '<article class="item' + (status === 'fail' || status === 'unknown' ? ' dim' : '') + '" data-key="' + key + '">' +
       '<div class="item-head"><div>' +
       (showChain ? '<p class="item-chain">' + esc(chain.name) + '</p>' : '') +
       '<h3 class="item-name">' + esc(item.name) + '</h3>' +
@@ -585,12 +633,14 @@
 
     function card(c) {
       var count = c.items.filter(function (it) { return fits(it, goal); }).length;
+      var noData = c.items.filter(function (it) { return unknownFor(it, goal); }).length;
       var isPin = pins.indexOf(c.id) > -1;
       return '<div style="display:flex;align-items:stretch;gap:0">' +
         '<button class="chaincard' + (isPin ? ' pinned' : '') + '" type="button" data-chain="' + esc(c.id) + '">' +
           '<span class="nm">' + esc(c.name) + '</span>' +
           '<span class="meta">' + (goal !== 'none'
-            ? '<span class="fit">' + count + ' fit</span>' + c.items.length + ' items'
+            ? (count ? '<span class="fit">' + count + ' fit</span>' : '<span class="nofit">none fit</span>') +
+              (noData ? noData + ' unchecked' : c.items.length + ' items')
             : c.items.length + ' items') + '</span>' +
           '<span class="arw">›</span>' +
         '</button>' +
@@ -620,11 +670,11 @@
     c.items.forEach(function (it) { if (it.cat && cats.indexOf(it.cat) === -1) cats.push(it.cat); });
     if (cat !== 'all' && cats.indexOf(cat) === -1) cat = 'all';
 
-    var idxs = c.items.map(function (_, i) { return i; }).filter(function (i) {
-      var it = c.items[i];
-      if (cat !== 'all' && it.cat !== cat) return false;
-      return fits(it, goal);
+    var inCat = c.items.map(function (_, i) { return i; }).filter(function (i) {
+      return cat === 'all' || c.items[i].cat === cat;
     });
+    var idxs     = inCat.filter(function (i) { return fits(c.items[i], goal); });
+    var unknowns = inCat.filter(function (i) { return unknownFor(c.items[i], goal); });
 
     if (goal !== 'none') {
       idxs.sort(function (a, b) {
@@ -667,7 +717,14 @@
       goalChips() + catRow +
       (idxs.length
         ? idxs.map(function (i) { return renderItem(c, i, false); }).join('')
-        : '<div class="empty"><b>Nothing clears this</b>No item here fits that goal, even with changes. That\'s a real answer.</div>') +
+        : (unknowns.length
+            ? ''
+            : '<div class="empty"><b>Nothing clears this</b>No item here fits that goal, even with changes. That\'s a real answer.</div>')) +
+      (unknowns.length
+        ? '<div class="nodata"><b>' + unknowns.length + ' item' + (unknowns.length > 1 ? 's' : '') +
+          ' can\'t be checked yet</b>No ' + esc(GOAL_NOUN[goal]) + ' numbers on file for these. They\'re shown, not judged.</div>' +
+          unknowns.map(function (i) { return renderItem(c, i, false); }).join('')
+        : '') +
       (addons ? '<div class="addons"><h3>Watch the add-ons</h3>' + addons + '</div>' : '');
   }
 
