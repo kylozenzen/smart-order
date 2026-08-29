@@ -176,8 +176,9 @@
           "note": "Decoy — the default order",
           "cal": 590, "protein_g": 29, "net_carbs_g": 52, "fat_g": 27, "sat_fat_g": 9, "sodium_mg": 1160, "sugar_g": 11,
           "mods": [
-            { "label": "Order the Jr. instead", "delta": { "cal": -270, "protein_g": -13, "net_carbs_g": -24, "fat_g": -12, "sodium_mg": -510 } },
-            { "label": "No cheese", "delta": { "cal": -90, "fat_g": -7, "sat_fat_g": -4, "sodium_mg": -200, "protein_g": -5 } }
+            { "label": "No cheese", "delta": { "cal": -90, "fat_g": -7, "sat_fat_g": -4, "sodium_mg": -200, "protein_g": -5 } },
+            { "label": "No mayo", "delta": { "cal": -90, "fat_g": -10, "sodium_mg": -75 } },
+            { "label": "No bun (order it in a bowl)", "delta": { "cal": -200, "net_carbs_g": -34, "sodium_mg": -300 } }
           ]
         },
         {
